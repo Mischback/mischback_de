@@ -1,1 +1,7 @@
 jekyll-setup.log
+
+# Ruby environment normalization
+# from github.com/github/gitignore/Ruby.gitignore
+/.bundle/
+/vendor/bundle
+/lib/bundler/man/
