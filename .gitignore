@@ -5,3 +5,10 @@ jekyll-setup.log
 /.bundle/
 /vendor/bundle
 /lib/bundler/man/
+
+# Jekyll related
+# from github.com/github/gitignore/Jekyll.gitignore
+_site/
+.sass-cache/
+.jekyll-cache/
+.jekyll-metadata
