@@ -1,0 +1,19 @@
+
+# exclude directories/files from conversion
+exclude: [
+  ".bundle",
+  ".husky",
+  "vendor",
+  ".gitignore",
+  "Gemfile",
+  "Gemfile.lock",
+  "Makefile",
+  "README.md"
+  ]
+
+# keep these files (in the destination directory)
+# default: keep_files: [".git", ".svn"]
+keep_files: []
+
+# set the timezone for site generation
+timezone: Europe/Berlin
