@@ -17,3 +17,7 @@ keep_files: []
 
 # set the timezone for site generation
 timezone: Europe/Berlin
+
+# serving (locally for development)
+port: 4000
+host: 0.0.0.0
