@@ -4,7 +4,7 @@ source: content
 
 # keep these files (in the destination directory)
 # default: keep_files: [".git", ".svn"]
-keep_files: []
+keep_files: ["assets", "asset_manifest.json"]
 
 # set the timezone for site generation
 timezone: Europe/Berlin

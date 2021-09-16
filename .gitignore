@@ -14,7 +14,7 @@ node_modules
 .jekyll-metadata
 
 # ignore the build directories (frontend-skeleton)
-build/
+# build/  # new build dir is _site/assets, which is already ignored!
 _util/
 
 # ignore the build directories (Jekyll)

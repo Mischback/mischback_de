@@ -1,9 +1,13 @@
+
+# corresponds to "destination" in _config.yml (default: _site)
+JEKYLL_BUILD_DIR = _site
+
 # The intermediate build dir is the directory, where stylesheets, scripts,
 # images and other static assets are collected (in their production-ready
 # state) to be used by the final build step.
 #
 # This directory should be excluded from version control.
-FRONTEND_BUILD_DIR = _site/assets
+FRONTEND_BUILD_DIR = $(JEKYLL_BUILD_DIR)/assets
 
 # subdirectory for stylesheets
 FRONTEND_BUILD_DIR_CSS = $(FRONTEND_BUILD_DIR)/css
@@ -27,7 +31,7 @@ SOURCE_DIR_TS = $(SOURCE_DIR)/ts
 SOURCE_TS = $(shell find $(SOURCE_DIR_TS) -path $(SOURCE_DIR_TS)/_internal_util -prune -false -o -type f)
 
 # the actual manifest file for cache busting of static assets
-ASSET_MANIFEST_FILE = $(FRONTEND_BUILD_DIR)/asset_manifest.json
+ASSET_MANIFEST_FILE = _site/asset_manifest.json
 
 
 # INTERNALS
@@ -112,14 +116,14 @@ $(FRONTEND_BUILD_DIR_JS): $(addprefix $(FRONTEND_BUILD_DIR_JS)/, $(BUILD_JS_FILE
 # script files into one.
 # If you want to provide seperate script files, you will have to provide
 # dedicated rules.
-$(FRONTEND_BUILD_DIR_JS)/bundle.js: $(FRONTEND_BUILD_DIR_JS)/index.js | node_modules
+$(FRONTEND_BUILD_DIR_JS)/bundle.js: $(FRONTEND_BUILD_DIR_JS)/tmp/*.js | node_modules
 	$(create_dir)
 ifeq ($(BUILD_MODE),$(DEVELOPMENT_FLAG))
 	echo "[DEVELOPMENT] bundling script files."
-	npx browserify $(FRONTEND_BUILD_DIR_JS)/*.js -o $@ --debug
+	npx browserify $(FRONTEND_BUILD_DIR_JS)/tmp/*.js -o $@ --debug
 else
 	echo "[PRODUCTION] bundling script files."
-	npx browserify $(FRONTEND_BUILD_DIR_JS)/*.js | \
+	npx browserify $(FRONTEND_BUILD_DIR_JS)/tmp/*.js | \
 	npx uglifyjs --compress --mangle --output $@
 endif
 
@@ -129,7 +133,7 @@ endif
 # definition (provided in "tsconfig.production.json").
 # If you have other requirements, you will have to provide dedicated rules,
 # probably with dedicated project definitions.
-$(FRONTEND_BUILD_DIR_JS)/index.js : $(SOURCE_TS) | node_modules
+$(FRONTEND_BUILD_DIR_JS)/tmp/%.js : $(SOURCE_DIR_TS)/%.ts $(SOURCE_TS) | node_modules
 	$(create_dir)
 ifeq ($(BUILD_MODE),$(DEVELOPMENT_FLAG))
 	echo "[DEVELOPMENT] compiling script files."
@@ -200,12 +204,12 @@ clean/full : clean
 
 
 ### FROM JEKYLL SETUP
-_site : content/index.html
+$(JEKYLL_BUILD_DIR) : content $(ASSET_MANIFEST_FILE)
 	bundle exec jekyll build
 
-jekyll/build : _site
+jekyll/prod : $(JEKYLL_BUILD_DIR)
 
-jekyll/serve :
+jekyll/serve : | $(FRONTEND_BUILD_DIR)
 	bundle exec jekyll serve
 ### FROM JEKYLL SETUP
 
@@ -215,4 +219,4 @@ jekyll/serve :
 # these targets don't produce actual output
 .PHONY: clean clean/full dev dev/watch lint lint/eslint lint/prettier \
         lint/stylelint prod tree util \
-				jekyll/build jekyll/serve
+				jekyll/prod jekyll/serve
