@@ -152,13 +152,13 @@ $(ASSET_MANIFEST_FILE): $(FRONTEND_BUILD_DIR) | _util/bin/
 # "Production mode" means:
 #   - stylesheets are generated WITHOUT source maps
 #   - stylesheets are purged, prefixed with vendor-specific stuff, minimized
-prod: $(ASSET_MANIFEST_FILE)
+assets/prod: $(ASSET_MANIFEST_FILE)
 
 # Build the website in development mode.
 # "Development mode" means:
 #   - stylesheets are generated with a source map
 #   - stylesheets will not be optimized / minimized
-dev:
+assets/dev:
 	BUILD_MODE=$(DEVELOPMENT_FLAG) \
 	GNUMAKEFLAGS=--no-print-directory \
 	$(MAKE) $(FRONTEND_BUILD_DIR)
@@ -167,7 +167,7 @@ dev:
 # "npm-watch" is actually a wrapper around "nodemon" and simplifies
 # configuration.
 # "npm-watch" is configured in "./package.json" and basically triggers
-# "make dev", rebuilding whatever is required.
+# "make assets/dev", rebuilding whatever is required.
 dev/watch: | node_modules
 	npm run watch build
 
@@ -202,21 +202,21 @@ clean :
 clean/full : clean
 	rm -rf _util
 
-
-### FROM JEKYLL SETUP
-$(JEKYLL_BUILD_DIR) : content $(ASSET_MANIFEST_FILE)
+$(JEKYLL_BUILD_DIR) : content/*.html $(ASSET_MANIFEST_FILE)
 	bundle exec jekyll build
 
 jekyll/prod : $(JEKYLL_BUILD_DIR)
 
-jekyll/serve : | $(FRONTEND_BUILD_DIR)
+jekyll/serve :
+	BUILD_MODE=$(DEVELOPMENT_FLAG) \
+	GNUMAKEFLAGS=--no-print-directory \
+	$(MAKE) $(FRONTEND_BUILD_DIR) && \
 	bundle exec jekyll serve
-### FROM JEKYLL SETUP
 
 # do not print commands to stdout
 .SILENT:
 
 # these targets don't produce actual output
-.PHONY: clean clean/full dev dev/watch lint lint/eslint lint/prettier \
-        lint/stylelint prod tree util \
+.PHONY: clean clean/full assets/dev dev/watch lint lint/eslint lint/prettier \
+        lint/stylelint assets/prod tree util \
 				jekyll/prod jekyll/serve
