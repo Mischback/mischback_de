@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.production.json",
   "compilerOptions": {
-    "outDir": "./build/js/",
+    "outDir": "./_site/assets/js/",
     "removeComments": false,
     "inlineSourceMap": true,
     "inlineSources": true

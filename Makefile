@@ -3,14 +3,14 @@
 # state) to be used by the final build step.
 #
 # This directory should be excluded from version control.
-BUILD_DIR = build
+FRONTEND_BUILD_DIR = _site/assets
 
 # subdirectory for stylesheets
-BUILD_DIR_CSS = $(BUILD_DIR)/css
+FRONTEND_BUILD_DIR_CSS = $(FRONTEND_BUILD_DIR)/css
 BUILD_CSS_FILES = style.css
 
 # subdirectory for scripts
-BUILD_DIR_JS = $(BUILD_DIR)/js
+FRONTEND_BUILD_DIR_JS = $(FRONTEND_BUILD_DIR)/js
 BUILD_JS_FILES = bundle.js
 
 # The source dir contains the source for stylesheets, scripts, images and any
@@ -27,7 +27,7 @@ SOURCE_DIR_TS = $(SOURCE_DIR)/ts
 SOURCE_TS = $(shell find $(SOURCE_DIR_TS) -path $(SOURCE_DIR_TS)/_internal_util -prune -false -o -type f)
 
 # the actual manifest file for cache busting of static assets
-ASSET_MANIFEST_FILE = $(BUILD_DIR)/asset_manifest.json
+ASSET_MANIFEST_FILE = $(FRONTEND_BUILD_DIR)/asset_manifest.json
 
 
 # INTERNALS
@@ -62,25 +62,25 @@ _util/bin/ : $(shell find $(SOURCE_DIR_TS)/_internal_util -type f)
 
 # Build all required assets, including stylesheets (css/*.css), javascripts
 # (js/*.js), images/graphics (images/*.{png,jpg,webp} and fonts (fonts/*.*).
-$(BUILD_DIR): $(BUILD_DIR_CSS) $(BUILD_DIR_JS)
+$(FRONTEND_BUILD_DIR): $(FRONTEND_BUILD_DIR_CSS) $(FRONTEND_BUILD_DIR_JS)
 
 # Build the CSS directory by building required CSS files.
 # It is generally advised to keep all styles in one single CSS file for
 # production environments.
 # However, this Makefile supports splitting the styles aswell, see the variable
 # BUILD_CSS_FILES
-$(BUILD_DIR_CSS): $(addprefix $(BUILD_DIR_CSS)/, $(BUILD_CSS_FILES))
+$(FRONTEND_BUILD_DIR_CSS): $(addprefix $(FRONTEND_BUILD_DIR_CSS)/, $(BUILD_CSS_FILES))
 
 # Actually compiles SCSS to CSS
 # The recipe is using SASS (dart-sass) to compile *.scss files, which may be
 # located in $(SOURCE_SASS_DIR), to *.css file(s), which will be written to
-# $(BUILD_DIR_CSS).
+# $(FRONTEND_BUILD_DIR_CSS).
 # In production mode, these CSS files will then be post-processed by PostCSS.
 #
 # The recipe does respect the $(BUILD_MODE) and will create and store the
 # corresponding source maps, if run with $(DEVELOPMENT_FLAG). In development
 # mode no post-processing will be be performed.
-$(BUILD_DIR_CSS)/%.css : $(SOURCE_DIR_SASS)/%.scss $(SOURCE_SASS) | node_modules
+$(FRONTEND_BUILD_DIR_CSS)/%.css : $(SOURCE_DIR_SASS)/%.scss $(SOURCE_SASS) | node_modules
 	$(create_dir)
 ifeq ($(BUILD_MODE),$(DEVELOPMENT_FLAG))
 	echo "[DEVELOPMENT] building stylesheet: $@ from $<"
@@ -105,21 +105,21 @@ endif
 # BUILD_JS_FILES.
 # PLEASE NOTE that you will have to create a dedicated rule for every target,
 # possibly with a dedicated tsconfig aswell.
-$(BUILD_DIR_JS): $(addprefix $(BUILD_DIR_JS)/, $(BUILD_JS_FILES))
+$(FRONTEND_BUILD_DIR_JS): $(addprefix $(FRONTEND_BUILD_DIR_JS)/, $(BUILD_JS_FILES))
 
 # Bundle all script files into one single asset.
 # Following the best practice to only serve one script file, this bundles all
 # script files into one.
 # If you want to provide seperate script files, you will have to provide
 # dedicated rules.
-$(BUILD_DIR_JS)/bundle.js: $(BUILD_DIR_JS)/index.js | node_modules
+$(FRONTEND_BUILD_DIR_JS)/bundle.js: $(FRONTEND_BUILD_DIR_JS)/index.js | node_modules
 	$(create_dir)
 ifeq ($(BUILD_MODE),$(DEVELOPMENT_FLAG))
 	echo "[DEVELOPMENT] bundling script files."
-	npx browserify $(BUILD_DIR_JS)/*.js -o $@ --debug
+	npx browserify $(FRONTEND_BUILD_DIR_JS)/*.js -o $@ --debug
 else
 	echo "[PRODUCTION] bundling script files."
-	npx browserify $(BUILD_DIR_JS)/*.js | \
+	npx browserify $(FRONTEND_BUILD_DIR_JS)/*.js | \
 	npx uglifyjs --compress --mangle --output $@
 endif
 
@@ -129,7 +129,7 @@ endif
 # definition (provided in "tsconfig.production.json").
 # If you have other requirements, you will have to provide dedicated rules,
 # probably with dedicated project definitions.
-$(BUILD_DIR_JS)/index.js : $(SOURCE_TS) | node_modules
+$(FRONTEND_BUILD_DIR_JS)/index.js : $(SOURCE_TS) | node_modules
 	$(create_dir)
 ifeq ($(BUILD_MODE),$(DEVELOPMENT_FLAG))
 	echo "[DEVELOPMENT] compiling script files."
@@ -141,8 +141,8 @@ endif
 
 # Create the manifest file for cache busting
 # This uses an internal NodeJS script
-$(ASSET_MANIFEST_FILE): $(BUILD_DIR) | _util/bin/
-	node _util/bin/busted_manifest --rootDirectory $(BUILD_DIR) --outFile $@ -m rename
+$(ASSET_MANIFEST_FILE): $(FRONTEND_BUILD_DIR) | _util/bin/
+	node _util/bin/busted_manifest --rootDirectory $(FRONTEND_BUILD_DIR) --outFile $@ -m rename
 
 # Build the website in production mode.
 # "Production mode" means:
@@ -157,7 +157,7 @@ prod: $(ASSET_MANIFEST_FILE)
 dev:
 	BUILD_MODE=$(DEVELOPMENT_FLAG) \
 	GNUMAKEFLAGS=--no-print-directory \
-	$(MAKE) $(BUILD_DIR)
+	$(MAKE) $(FRONTEND_BUILD_DIR)
 
 # Use NodeJS to watch for file changes and triggers rebuilding
 # "npm-watch" is actually a wrapper around "nodemon" and simplifies
@@ -193,7 +193,7 @@ util : _util/bin/
 
 clean :
 	rm -f $(ASSET_MANIFEST_FILE)
-	rm -rf $(BUILD_DIR)
+	rm -rf $(FRONTEND_BUILD_DIR)
 
 clean/full : clean
 	rm -rf _util
