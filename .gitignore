@@ -1,0 +1,26 @@
+# NodeJS's module directory
+node_modules
+
+# Ruby-related module directories
+# from github.com/github/gitignore/Ruby.gitignore
+/.bundle/
+/vendor/bundle
+/lib/bundler/man/
+
+# Cache directories
+# from github.com/github/gitignore/Jekyll.gitignore
+.sass-cache/
+.jekyll-cache/
+.jekyll-metadata
+
+# ignore the build directories (frontend-skeleton)
+build/
+_util/
+
+# ignore the build directories (Jekyll)
+# from github.com/github/gitignore/Jekyll.gitignore
+_site/
+
+# TODO: STOP ignoring the *.lock-files when merging back to "development"
+package-lock.json
+Gemfile.lock
