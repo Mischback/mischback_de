@@ -200,7 +200,7 @@ clean/full : clean
 
 
 ### FROM JEKYLL SETUP
-_site : index.html
+_site : content/index.html
 	bundle exec jekyll build
 
 jekyll/build : _site

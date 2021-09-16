@@ -1,22 +1,6 @@
 
-# exclude directories/files from conversion
-exclude: [
-  ".bundle",
-  ".husky",
-  "vendor",
-  ".gitignore",
-  "Gemfile",
-  "Gemfile.lock",
-  "Makefile",
-  "package.json",
-  "package-lock.json",
-  "postcss.config.js",
-  "README.md",
-  "tsconfig.json",
-  "tsconfig.development.json",
-  "tsconfig.internal_util.json",
-  "tsconfig.production.json"
-  ]
+# where is the actual content?
+source: content
 
 # keep these files (in the destination directory)
 # default: keep_files: [".git", ".svn"]
