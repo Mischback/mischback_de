@@ -8,7 +8,14 @@ exclude: [
   "Gemfile",
   "Gemfile.lock",
   "Makefile",
-  "README.md"
+  "package.json",
+  "package-lock.json",
+  "postcss.config.js",
+  "README.md",
+  "tsconfig.json",
+  "tsconfig.development.json",
+  "tsconfig.internal_util.json",
+  "tsconfig.production.json"
   ]
 
 # keep these files (in the destination directory)
