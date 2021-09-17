@@ -20,7 +20,3 @@ _util/
 # ignore the build directories (Jekyll)
 # from github.com/github/gitignore/Jekyll.gitignore
 _site/
-
-# TODO: STOP ignoring the *.lock-files when merging back to "development"
-package-lock.json
-Gemfile.lock
