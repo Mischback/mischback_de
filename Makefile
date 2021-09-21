@@ -1,12 +1,20 @@
 # ##### CONFIGURATION
 
-SRC_ASSETS = _src
-PROJECT_UTILITY_SCRIPTS = _util/bin/
-STAMP_DIR = .make-stamps
+BUILD_DIR := _site
+BUILD_ASSETS := $(BUILD_DIR)/assets
+SRC_ASSETS := _src
+SRC_CONTENT := content
+JEKYLL_CONFIG := _config.yml
+PROJECT_UTILITY_SCRIPTS := _util/bin/
+STAMP_DIR := .make-stamps
 
 
 # ##### INTERNAL
+STAMP_BUILD_COMPLETED := $(STAMP_DIR)/build-completed
+STAMP_JEKYLL_INSTALL := $(STAMP_DIR)/jekyll-install
 STAMP_NODE_INSTALL := $(STAMP_DIR)/node-install
+
+SRC_CONTENT_FILES = $(shell find $(SRC_CONTENT) -type f)
 
 # utility function to create required directories on the fly
 create_dir = @mkdir -p $(@D)
@@ -25,6 +33,17 @@ MAKEFLAGS += --no-builtin-rules
 
 # ##### RECIPES
 
+build/production : $(STAMP_BUILD_COMPLETED)
+.PHONY : build/production
+
+build : build/production
+.PHONY : build
+
+$(STAMP_BUILD_COMPLETED) : $(SRC_CONTENT_FILES) $(JEKYLL_CONFIG) | $(STAMP_JEKYLL_INSTALL)
+	$(create_dir)
+	bundle exec jekyll build
+	touch $@
+
 $(STAMP_NODE_INSTALL) : package.json
 	$(create_dir)
 	npm install
@@ -35,7 +54,7 @@ $(PROJECT_UTILITY_SCRIPTS) : $(shell find $(SRC_ASSETS)/ts/_internal_util -type 
 	echo "[UTIL] building project utilities..."
 	npx tsc --project tsconfig.internal_util.json
 
-setup : $(PROJECT_UTILITY_SCRIPTS) $(STAMP_NODE_INSTALL)
+setup : $(PROJECT_UTILITY_SCRIPTS) $(STAMP_NODE_INSTALL) $(STAMP_JEKYLL_INSTALL)
 .PHONY : setup
 
 # The following recipes run the linters against the code base, including
@@ -65,6 +84,7 @@ tree :
 .PHONY : tree
 
 clean :
+	rm -rf $(BUILD_DIR)
 	rm -rf $(STAMP_DIR)
 .PHONY : clean
 
