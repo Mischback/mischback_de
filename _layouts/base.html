@@ -4,11 +4,7 @@
     <meta charset="utf-8">
     <title>{{ page.title }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-{% if site.data.assets %}
-    <link rel="stylesheet" href="{{ site.data.assets["/assets/css/style.css"] }}">
-{% else %}
-    <link rel="stylesheet" href="/assets/css/style.css">
-{% endif %}
+    {% include stylesheet.html filename="/assets/css/style.css" %}
   </head>
 
   <body>

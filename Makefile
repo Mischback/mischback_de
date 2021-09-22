@@ -81,6 +81,7 @@ SRC_CONTENT_FILES = index.html $(shell find $(SRC_CONTENT) -type f)
 SRC_FILES_SASS = $(shell find $(SRC_ASSETS)/sass -type f)
 SRC_FILES_TS = $(shell find $(SRC_ASSETS)/ts -path $(SRC_ASSETS)/ts/_internal_util -prune -false -o -type f)
 JEKYLL_LAYOUTS := $(shell find _layouts -type f)
+JEKYLL_INCLUDES := $(shell find _includes -type f)
 
 # utility function to create required directories on the fly
 create_dir = @mkdir -p $(@D)
@@ -125,7 +126,7 @@ dev : build/development
 # Please note that Jekyll's build command will in fact create multiple files,
 # depending on your content.
 # TODO: Add Jekyll-specific prerequisites, e.g. "_includes", "_layouts", ...
-$(STAMP_BUILD_COMPLETED) : $(SRC_CONTENT_FILES) $(STAMP_ASSETS_READY) $(JEKYLL_LAYOUTS) $(JEKYLL_CONFIG) | $(STAMP_JEKYLL_INSTALL)
+$(STAMP_BUILD_COMPLETED) : $(SRC_CONTENT_FILES) $(STAMP_ASSETS_READY) $(JEKYLL_LAYOUTS) $(JEYKYLL_INCLUDES) $(JEKYLL_CONFIG) | $(STAMP_JEKYLL_INSTALL)
 	echo "[any] running Jekyll build process..."
 	$(create_dir)
 	bundle exec jekyll build
