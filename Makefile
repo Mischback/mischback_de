@@ -85,7 +85,7 @@ lint/prettier :
 
 # Run "tree" with prepared options, matching this repositories structure.
 tree :
-	tree -a -I ".bundle|.git|.husky|.jekyll-cache|node_modules|.sass-cache|vendor|.vscode" --dirsfirst -C
+	tree -a -I ".bundle|.git|.husky|.jekyll-cache|.make-stamps|node_modules|.sass-cache|vendor|.vscode" --dirsfirst -C
 .PHONY : tree
 
 clean :
