@@ -228,7 +228,7 @@ $(STAMP_NODE_INSTALL) : package.json
 
 # Compile the internal utility scripts
 $(PROJECT_UTILITY_SCRIPTS) : $(shell find $(SRC_ASSETS)/ts/_internal_util -type f) tsconfig.internal_util.json | $(STAMP_NODE_INSTALL)
-	echo "[UTIL] building project utilities..."
+	echo "[utility] building project utilities..."
 	npx tsc --project tsconfig.internal_util.json
 
 # Shortcut to install Ruby gems, NodeJS packages and build the project's utility

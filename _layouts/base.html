@@ -4,18 +4,11 @@
     <meta charset="utf-8">
     <title>{{ page.title }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
 {% if site.data.assets %}
-
-  {% capture style_hashed %}_site/assets/css/style.css{% endcapture %}
-  {{ site.data.assets[style_hashed] }}
-
-    <meta name="internal" content="data.assets available => production mode">
+    <link rel="stylesheet" href="{{ site.data.assets["/assets/css/style.css"] }}">
 {% else %}
-    <meta name="internal" content="data.assets not available => development mode">
-{% endif %}
-
     <link rel="stylesheet" href="/assets/css/style.css">
+{% endif %}
   </head>
 
   <body>

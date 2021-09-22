@@ -215,8 +215,11 @@ function hashWalker(
    * While hashWalker operates on absolute file paths, the resulting list of
    * tuples should provide relative paths again.
    */
-  if (commonPathLength === -1)
-    commonPathLength = path.resolve(dir).length - dir.length;
+  if (commonPathLength === -1) {
+    // TODO: Does this FIX work generally?!
+    commonPathLength =
+      path.resolve(dir).length - dir.length + path.dirname(dir).length;
+  }
 
   return new Promise((resolve, reject) => {
     fsreaddir(dir)
