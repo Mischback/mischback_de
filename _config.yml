@@ -1,5 +1,38 @@
 # where is the actual content?
-source: content
+source: .
+
+collections_dir: content
+
+# exclude these files from conversion
+# Please note: Files prefixed with "." are automatically excluded. Following the
+# principle of "explicit is better than implicit", the project's configuration
+# files are provided explicitally.
+exclude: [
+  "Gemfile",         # per default
+  "Gemfile.lock",    # per default
+  "node_modules",    # per default
+  "vendor/bundle/",  # per default
+  "vendor/cache/",   # per default
+  "vendor/gems/",    # per default
+  "vendor/ruby/",    # per default
+  ".editorconfig",
+  ".eslintrc.json",
+  ".gitignore",
+  ".lintstagedrc.json",
+  ".prettierignore",
+  ".prettierrc.json",
+  ".stylelintignore",
+  ".stylelintrc.json",
+  "Makefile",
+  "package-lock.json",
+  "package.json",
+  "postcss.config.js",
+  "README.md",
+  "tsconfig.development.json",
+  "tsconfig.internal_util.json",
+  "tsconfig.json",
+  "tsconfig.production.json"
+  ]
 
 # keep these files (in the destination directory)
 # default: keep_files: [".git", ".svn"]

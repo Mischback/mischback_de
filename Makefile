@@ -77,7 +77,7 @@ endif
 # Please note: This is rather generic and may trigger (re-) builds that are not
 # strictly necessary, i.e. if the project has more than one stylesheet which
 # rely on a different set of source files.
-SRC_CONTENT_FILES = $(shell find $(SRC_CONTENT) -type f)
+SRC_CONTENT_FILES = index.html $(shell find $(SRC_CONTENT) -type f)
 SRC_FILES_SASS = $(shell find $(SRC_ASSETS)/sass -type f)
 SRC_FILES_TS = $(shell find $(SRC_ASSETS)/ts -path $(SRC_ASSETS)/ts/_internal_util -prune -false -o -type f)
 
