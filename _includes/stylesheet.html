@@ -1,0 +1,5 @@
+{% if site.data.assets %}
+    <link rel="stylesheet" href="{{ site.data.assets[include.filename] }}">
+{% else %}
+    <link rel="stylesheet" href="{{ include.filename }}">
+{% endif %}
