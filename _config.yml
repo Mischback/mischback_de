@@ -3,6 +3,14 @@ source: .
 
 collections_dir: content
 
+defaults:
+  -
+    scope:
+      path: ""
+    values:
+      primary_language: "en"
+      title: "mischback.de"
+
 # exclude these files from conversion
 # Please note: Files prefixed with "." are automatically excluded. Following the
 # principle of "explicit is better than implicit", the project's configuration
