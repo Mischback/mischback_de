@@ -57,7 +57,7 @@ STAMP_NODE_INSTALL := $(STAMP_DIR)/node-install
 # Handle the slight differences between the build modes
 # 1) To keep track of the readiness of the frontend assets, an artificial stamp
 #    is used during "development", while "production" relies on the actual
-#    ASSET_MANIFEST_FILE, containing the mapping of original file names to
+#    ASSETS_MANIFEST_FILE, containing the mapping of original file names to
 #    hashed file names.
 # 2) Because the "production" mode relies on asset hashing, which is provided
 #    as an project-specific utility, this utilities have to be build and the
@@ -275,6 +275,7 @@ tree : tree/content
 clean :
 	rm -rf $(BUILD_DIR)
 	rm -rf $(STAMP_DIR)
+	rm -f $(ASSETS_MANIFEST_FILE)
 .PHONY : clean
 
 # Additionally removes the project's utility scripts
