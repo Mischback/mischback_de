@@ -21,4 +21,9 @@ _util/
 # from github.com/github/gitignore/Jekyll.gitignore
 _site/
 
+# Ignore the project's Make stamps
 .make-stamps/
+
+# Ignore the asset manifest file, containing the mapping from asset file names
+# to their hashed equivalents
+_data/assets.json

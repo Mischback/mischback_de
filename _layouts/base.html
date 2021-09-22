@@ -4,6 +4,13 @@
     <meta charset="utf-8">
     <title>{{ page.title }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
+{% if site.data.assets %}
+    <meta name="internal" content="data.assets available => production mode">
+{% else %}
+    <meta name="internal" content="data.assets not available => development mode">
+{% endif %}
+
     <link rel="stylesheet" href="/assets/css/style.css">
   </head>
 
