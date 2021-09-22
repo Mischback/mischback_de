@@ -4,15 +4,28 @@ BUILD_DIR := _site
 BUILD_ASSETS := $(BUILD_DIR)/assets
 SRC_ASSETS := _src
 SRC_CONTENT := content
+ASSETS_MANIFEST_FILE := _site/assets.json
 JEKYLL_CONFIG := _config.yml
 PROJECT_UTILITY_SCRIPTS := _util/bin/
 STAMP_DIR := .make-stamps
 
 
 # ##### INTERNAL
+DEVELOPMENT_FLAG := dev
+
+STAMP_ASSETS_DEV := $(STAMP_DIR)/assets-dev
 STAMP_BUILD_COMPLETED := $(STAMP_DIR)/build-completed
+STAMP_CSS_READY := $(STAMP_DIR)/css-ready
 STAMP_JEKYLL_INSTALL := $(STAMP_DIR)/jekyll-install
+STAMP_JS_READY := $(STAMP_DIR)/js-ready
 STAMP_NODE_INSTALL := $(STAMP_DIR)/node-install
+
+ifeq ($(BUILD_MODE), $(DEVELOPMENT_FLAG))
+STAMP_ASSETS_READY := $(STAMP_ASSETS_DEV)
+else
+STAMP_ASSETS_READY := $(ASSETS_MANIFEST_FILE)
+$(STAMP_ASSETS_READY) : | $(PROJECT_UTILITY_SCRIPTS)
+endif
 
 SRC_CONTENT_FILES = $(shell find $(SRC_CONTENT) -type f)
 
@@ -39,9 +52,36 @@ build/production : $(STAMP_BUILD_COMPLETED)
 build : build/production
 .PHONY : build
 
-$(STAMP_BUILD_COMPLETED) : $(SRC_CONTENT_FILES) $(JEKYLL_CONFIG) | $(STAMP_JEKYLL_INSTALL)
+build/development :
+	BUILD_MODE=$(DEVELOPMENT_FLAG) \
+	GNUMAKEFLAGS=--no-print-directory \
+	$(MAKE) $(STAMP_BUILD_COMPLETED)
+.PHONY : build/development
+
+dev : build/development
+.PHONY : dev
+
+$(STAMP_BUILD_COMPLETED) : $(SRC_CONTENT_FILES) $(STAMP_ASSETS_READY) $(JEKYLL_CONFIG) | $(STAMP_JEKYLL_INSTALL)
 	$(create_dir)
 	bundle exec jekyll build
+	touch $@
+
+$(STAMP_ASSETS_READY) : $(STAMP_CSS_READY) $(STAMP_JS_READY)
+	$(create_dir)
+ifeq ($(BUILD_MODE), $(DEVELOPMENT_FLAG))
+	touch $@
+else
+	echo "[production] hashing asset files..."
+	mkdir -p $(BUILD_ASSETS)
+	node $(PROJECT_UTILITY_SCRIPTS)/busted_manifest --rootDirectory $(BUILD_ASSETS) --outFile $@ -m rename
+endif
+
+$(STAMP_CSS_READY) :
+	$(create_dir)
+	touch $@
+
+$(STAMP_JS_READY) :
+	$(create_dir)
 	touch $@
 
 $(STAMP_JEKYLL_INSTALL) : Gemfile
