@@ -28,6 +28,7 @@ $(STAMP_ASSETS_READY) : | $(PROJECT_UTILITY_SCRIPTS)
 endif
 
 SRC_CONTENT_FILES = $(shell find $(SRC_CONTENT) -type f)
+SRC_FILES_SASS = $(shell find $(SRC_ASSETS)/sass -type f)
 
 # utility function to create required directories on the fly
 create_dir = @mkdir -p $(@D)
@@ -76,9 +77,19 @@ else
 	node $(PROJECT_UTILITY_SCRIPTS)/busted_manifest --rootDirectory $(BUILD_ASSETS) --outFile $@ -m rename
 endif
 
-$(STAMP_CSS_READY) :
+$(STAMP_CSS_READY) : $(BUILD_ASSETS)/css/style.css
 	$(create_dir)
 	touch $@
+
+$(BUILD_ASSETS)/css/%.css : $(SRC_ASSETS)/sass/%.scss $(SRC_FILES_SASS) | $(STAMP_NODE_INSTALL)
+ifeq ($(BUILD_MODE), $(DEVELOPMENT_FLAG))
+	echo "[development] compiling $@..."
+	npx sass $<:$@ --style=expanded --source-map --stop-on-error
+else
+	echo "[production] compiling and post-processing $@..."
+	npx sass $< --style=expanded --no-source-map --stop-on-error | \
+	npx postcss -o $@
+endif
 
 $(STAMP_JS_READY) :
 	$(create_dir)
