@@ -1,18 +1,51 @@
 # ##### CONFIGURATION
 
+# Target directory for the build process
+# Must be synchronized with Jekyll's config ("destination", default: _site)
 BUILD_DIR := _site
+
+# Target directory for frontend assets
+# If this is placed inside of BUILD_DIR, make sure to include this directory in
+# Jekyll's config ("keep_files").
+# The frontend assets are built without Jekyll's own toolchain. Without
+# including this directory in "keep_files", Jekyll will remove the already
+# freshly built assets before Jekyll's own compilation run.
 BUILD_ASSETS := $(BUILD_DIR)/assets
+
+# Directory containing the sources for frontend assets
 SRC_ASSETS := _src
+
+# Directory containing the actual content
+# Must be synchronized with Jekyll's config ("source")
 SRC_CONTENT := content
+
+# Path/filename of the asset manifest file
+# During "production" mode, the frontend asset files are hashed and the hash
+# is appended to the filename.
+# This manifest provides the mapping from the original to the new filenames.
+# TODO: This should be readable by Jekyll, probably in its _data directory
 ASSETS_MANIFEST_FILE := _site/assets.json
+
+# Jekyll's config file (default: _config.yml)
 JEKYLL_CONFIG := _config.yml
+
+# Directory for the project's internal utility scripts
+# Should be included in .gitignore
 PROJECT_UTILITY_SCRIPTS := _util/bin/
+
+# Make's internal stamp directory
+# Stamps are used to keep track of certain build steps.
+# Should be included in .gitignore
 STAMP_DIR := .make-stamps
 
 
 # ##### INTERNAL
+
+# The actual value of the flag controlling the development mode
+# This should not need any modification
 DEVELOPMENT_FLAG := dev
 
+# Define file names for stamp files
 STAMP_ASSETS_DEV := $(STAMP_DIR)/assets-dev
 STAMP_BUILD_COMPLETED := $(STAMP_DIR)/build-completed
 STAMP_CSS_READY := $(STAMP_DIR)/css-ready
@@ -21,6 +54,16 @@ STAMP_JS_COMPILED := $(STAMP_DIR)/js-compiled
 STAMP_JS_READY := $(STAMP_DIR)/js-ready
 STAMP_NODE_INSTALL := $(STAMP_DIR)/node-install
 
+# Handle the slight differences between the build modes
+# 1) To keep track of the readiness of the frontend assets, an artificial stamp
+#    is used during "development", while "production" relies on the actual
+#    ASSET_MANIFEST_FILE, containing the mapping of original file names to
+#    hashed file names.
+# 2) Because the "production" mode relies on asset hashing, which is provided
+#    as an project-specific utility, this utilities have to be build and the
+#    corresponding target is added as an order-only prerequisite.
+# 3) While compiling the JS script files, different config files are used for
+#    the TS compiler, which are added as prerequisites.
 ifeq ($(BUILD_MODE), $(DEVELOPMENT_FLAG))
 STAMP_ASSETS_READY := $(STAMP_ASSETS_DEV)
 $(STAMP_JS_COMPILED) : tsconfig.development.json
@@ -30,6 +73,10 @@ $(STAMP_ASSETS_READY) : | $(PROJECT_UTILITY_SCRIPTS)
 $(STAMP_JS_COMPILED) : tsconfig.production.json
 endif
 
+# Manage prerequisites to actually include all dependencies
+# Please note: This is rather generic and may trigger (re-) builds that are not
+# strictly necessary, i.e. if the project has more than one stylesheet which
+# rely on a different set of source files.
 SRC_CONTENT_FILES = $(shell find $(SRC_CONTENT) -type f)
 SRC_FILES_SASS = $(shell find $(SRC_ASSETS)/sass -type f)
 SRC_FILES_TS = $(shell find $(SRC_ASSETS)/ts -path $(SRC_ASSETS)/ts/_internal_util -prune -false -o -type f)
@@ -40,37 +87,54 @@ create_dir = @mkdir -p $(@D)
 
 # ##### MAKE INTERNAL
 
-# do not print commands to stdout
-.SILENT:
-
-# "make"-specific configuration
-.DELETE_ON_ERROR:  # deletes failed build files
-MAKEFLAGS += --warn-undefined-variables
-MAKEFLAGS += --no-builtin-rules
+.SILENT:                                # do not print commands to stdout
+.DELETE_ON_ERROR:                       # delete failed build files
+MAKEFLAGS += --warn-undefined-variables # Insult me!
+MAKEFLAGS += --no-builtin-rules         # disable Make magic!
 
 
 # ##### RECIPES
 
+# Shortcut to build with production settings
 build/production : $(STAMP_BUILD_COMPLETED)
 .PHONY : build/production
 
+# Shortcut to build with production settings
 build : build/production
 .PHONY : build
 
+# Shortcut to build with development settings
 build/development :
 	BUILD_MODE=$(DEVELOPMENT_FLAG) \
 	GNUMAKEFLAGS=--no-print-directory \
 	$(MAKE) $(STAMP_BUILD_COMPLETED)
 .PHONY : build/development
 
+# Shortcut to build with development settings
 dev : build/development
 .PHONY : dev
 
+# Build the whole project
+# This recipy by itsself actually executes Jekyll's build command. The recipe's
+# prerequisites ensure that the frontend assets are built aswell.
+# Additionally, the actual content source files and Jekyll's configuration file
+# is considered.
+# The recipe relies on an artificial stamp file to ensure maximal flexibility
+# without assuming any file to be present.
+# Please note that Jekyll's build command will in fact create multiple files,
+# depending on your content.
+# TODO: Add Jekyll-specific prerequisites, e.g. "_includes", "_layouts", ...
 $(STAMP_BUILD_COMPLETED) : $(SRC_CONTENT_FILES) $(STAMP_ASSETS_READY) $(JEKYLL_CONFIG) | $(STAMP_JEKYLL_INSTALL)
+	echo "[any] running Jekyll build process..."
 	$(create_dir)
 	bundle exec jekyll build
 	touch $@
 
+# Build the frontend assets
+# This recipe will perform different tasks, depending on the build mode.
+# During "development" it will use an artificial stamp file to track completion,
+# while it will actually perform the hashing of frontend assets during
+# "production" builds.
 $(STAMP_ASSETS_READY) : $(STAMP_CSS_READY) $(STAMP_JS_READY)
 	$(create_dir)
 ifeq ($(BUILD_MODE), $(DEVELOPMENT_FLAG))
@@ -81,10 +145,18 @@ else
 	node $(PROJECT_UTILITY_SCRIPTS)/busted_manifest --rootDirectory $(BUILD_ASSETS) --outFile $@ -m rename
 endif
 
+# Artificial build step for CSS assets
+# This target actually determines, which CSS files need to be built.
+# TODO: Define the files to be built in the Makefile's head section and expand
+#       the list here!
 $(STAMP_CSS_READY) : $(BUILD_ASSETS)/css/style.css
 	$(create_dir)
 	touch $@
 
+# Compile (and optimize) CSS files
+# During "development" builds, the stylesheets are build with source maps, while
+# in "production" mode, source maps are skipped and an additional
+# post-processing step (using PostCSS) is performed (see postcss.config.js).
 $(BUILD_ASSETS)/css/%.css : $(SRC_ASSETS)/sass/%.scss $(SRC_FILES_SASS) | $(STAMP_NODE_INSTALL)
 ifeq ($(BUILD_MODE), $(DEVELOPMENT_FLAG))
 	echo "[development] compiling $@..."
@@ -95,10 +167,20 @@ else
 	npx postcss -o $@
 endif
 
+# Artificial build step for JS assets
+# This target actually determines, which JS files need to be built.
+# TODO: Define the files to be built in the Makefile's head section and expand
+#       the list here!
+#       Only if this does make sense! Compilation of JS-files is done in one run
+#       of the TS-compiler (see below), but in fact we do only want one script
+#       file for production by bundling the different files together.
+#       Probably only the filename of the bundle should be controllable.
 $(STAMP_JS_READY) : $(BUILD_ASSETS)/js/bundle.js
 	$(create_dir)
 	touch $@
 
+# Bundle all JS scripts into one single file
+# In "production" mode, the resulting bundle is also compressed using "uglifyjs".
 $(BUILD_ASSETS)/js/bundle.js : $(STAMP_JS_COMPILED) | $(STAMP_NODE_INSTALL)
 ifeq ($(BUILD_MODE), $(DEVELOPMENT_FLAG))
 	echo "[development] bundling script files..."
@@ -109,6 +191,12 @@ else
 	npx uglifyjs --compress --mangle --output $@
 endif
 
+# Compile TS sources to JS
+# All source files are compiled in one run of the TS compiler (tsc), with
+# different settings for "production" and "development".
+# Please note that this will only handle the compilation of actual frontend
+# assets and not the project's internal utility scripts, refer to target
+# $(PROJECT_UTILITY_SCRIPTS).
 $(STAMP_JS_COMPILED) : $(SRC_FILES_TS) | $(STAMP_NODE_INSTALL)
 ifeq ($(BUILD_MODE), $(DEVELOPMENT_FLAG))
 	echo "[development] compiling script files..."
@@ -119,11 +207,19 @@ else
 endif
 	touch $@
 
+# Install all required Ruby gems as specified in Gemfile
+# This is applied as order-only prerequisite to all recipes that use
+# Ruby-related commands, e.g. Jekyll's build command.
+# TODO: This assumes that "bundle" is used, which might not be the case for
+#       every project
 $(STAMP_JEKYLL_INSTALL) : Gemfile
 	$(create_dir)
 	bundle install
 	touch $@
 
+# Install all required NodeJS packages as specified in package.json
+# This is applied as order-only prerequisite to all recipes that use
+# NodeJS-based commands, basically for the whole build chain of frontend assets.
 $(STAMP_NODE_INSTALL) : package.json
 	$(create_dir)
 	npm install
@@ -134,6 +230,8 @@ $(PROJECT_UTILITY_SCRIPTS) : $(shell find $(SRC_ASSETS)/ts/_internal_util -type 
 	echo "[UTIL] building project utilities..."
 	npx tsc --project tsconfig.internal_util.json
 
+# Shortcut to install Ruby gems, NodeJS packages and build the project's utility
+# scripts.
 setup : $(PROJECT_UTILITY_SCRIPTS) $(STAMP_NODE_INSTALL) $(STAMP_JEKYLL_INSTALL)
 .PHONY : setup
 
@@ -155,6 +253,7 @@ lint/stylelint : lint/prettier
 .PHONY : lint/stylelint
 
 lint/prettier :
+	echo "[LINT] running prettier..."
 	npx prettier -c .
 .PHONY : lint/prettier
 
@@ -163,11 +262,14 @@ tree :
 	tree -a -I ".bundle|.git|.husky|.jekyll-cache|.make-stamps|node_modules|.sass-cache|vendor|.vscode" --dirsfirst -C
 .PHONY : tree
 
+# Removes the build directory to enable a clean build
+# Additionally removes Make's stamp directory to actually force rebuilding
 clean :
 	rm -rf $(BUILD_DIR)
 	rm -rf $(STAMP_DIR)
 .PHONY : clean
 
+# Additionally removes the project's utility scripts
 clean/full : clean
 	rm -rf $(PROJECT_UTILITY_SCRIPTS)
 .PHONY : clean/full
