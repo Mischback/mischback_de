@@ -44,6 +44,11 @@ $(STAMP_BUILD_COMPLETED) : $(SRC_CONTENT_FILES) $(JEKYLL_CONFIG) | $(STAMP_JEKYL
 	bundle exec jekyll build
 	touch $@
 
+$(STAMP_JEKYLL_INSTALL) : Gemfile
+	$(create_dir)
+	bundle install
+	touch $@
+
 $(STAMP_NODE_INSTALL) : package.json
 	$(create_dir)
 	npm install
