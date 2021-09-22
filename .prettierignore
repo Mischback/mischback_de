@@ -1,9 +1,13 @@
 # ignore project-related directories
-.sass-cache
+.sass-cache/
+.jekyll-cache/
+/.bundle/
+/vendor/bundle
+/lib/bundler/man/
 node_modules
 
 # ignore our build directory, as it will never meet prettier's standard
-build
+_site
 
 # ignore the project's utility scripts
 _util
