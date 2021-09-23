@@ -232,6 +232,9 @@ $(PROJECT_UTILITY_SCRIPTS) : $(shell find $(SRC_ASSETS)/ts/_internal_util -type 
 	echo "[utility] building project utilities..."
 	npx tsc --project tsconfig.internal_util.json
 
+utility : $(PROJECT_UTILITY_SCRIPTS)
+.PHONY : utility
+
 # Shortcut to install Ruby gems, NodeJS packages and build the project's utility
 # scripts.
 setup : $(PROJECT_UTILITY_SCRIPTS) $(STAMP_NODE_INSTALL) $(STAMP_JEKYLL_INSTALL)
