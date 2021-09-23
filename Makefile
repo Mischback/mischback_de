@@ -126,7 +126,7 @@ dev : build/development
 # Please note that Jekyll's build command will in fact create multiple files,
 # depending on your content.
 # TODO: Add Jekyll-specific prerequisites, e.g. "_includes", "_layouts", ...
-$(STAMP_BUILD_COMPLETED) : $(SRC_CONTENT_FILES) $(STAMP_ASSETS_READY) $(JEKYLL_LAYOUTS) $(JEYKYLL_INCLUDES) $(JEKYLL_CONFIG) | $(STAMP_JEKYLL_INSTALL)
+$(STAMP_BUILD_COMPLETED) : $(SRC_CONTENT_FILES) $(STAMP_ASSETS_READY) $(JEKYLL_LAYOUTS) $(JEKYLL_INCLUDES) $(JEKYLL_CONFIG) | $(STAMP_JEKYLL_INSTALL)
 	echo "[any] running Jekyll build process..."
 	$(create_dir)
 	bundle exec jekyll build
