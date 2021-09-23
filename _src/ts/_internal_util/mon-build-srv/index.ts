@@ -1,5 +1,5 @@
 /* NodeJS modules */
-// import nodemon = require("nodemon");
+import nodemon = require("nodemon");
 import fs = require("fs");
 import path = require("path");
 import stdio = require("stdio");
@@ -51,15 +51,29 @@ function main(): void {
     }
   }
 
+  let nodemon_conf = "";
   try {
     const buffer = fs.readFileSync(config.nodemonConf, "utf-8");
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const nodemon_conf = JSON.parse(buffer.toString());
-    console.log(nodemon_conf);
+    nodemon_conf = JSON.parse(buffer.toString());
   } catch (err) {
     console.error("Could not parse nodemon configuration!");
     process.exit(EXIT_CONFIG_FAILURE);
   }
+
+  nodemon(nodemon_conf);
+
+  nodemon
+    .on("start", () => {
+      console.log("[nodemon] started...");
+    })
+    .on("quit", () => {
+      console.log("[nodemon] stopped...");
+      process.exit();
+    })
+    .on("restart", (files) => {
+      console.log("[nodemon] restarted due to: ", files);
+    });
 }
 
 main();

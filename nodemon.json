@@ -1,3 +1,6 @@
 {
-  "verbose": true
+  "exec": "make dev",
+  "ext": "css,scss,ts,html",
+  "verbose": true,
+  "watch": ["_src", "content", "_includes", "_layouts"]
 }
