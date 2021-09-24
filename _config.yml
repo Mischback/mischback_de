@@ -32,6 +32,7 @@ exclude: [
   ".stylelintignore",
   ".stylelintrc.json",
   "Makefile",
+  "nodemon.json",
   "package-lock.json",
   "package.json",
   "postcss.config.js",
