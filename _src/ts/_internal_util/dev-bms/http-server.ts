@@ -44,9 +44,7 @@ function determineRessourceFromUri(
       }
     } catch {
       return reject(
-        new DevBMSRessourceNotFoundError(
-          "Could not determine ressource:" + ressource
-        )
+        new DevBMSRessourceNotFoundError("Ressource not found!", ressource)
       );
     }
   });
@@ -81,17 +79,34 @@ export function launchHttpServer(): Promise<void> {
                 });
                 fileStream.on("end", () => {
                   response.end();
+                  console.log(
+                    '[dev-bms:http-server] 200 OK "' + ressource + '"'
+                  );
                 });
                 fileStream.on("error", () => {
                   return reject(new DevBMSServerError("foo"));
                 });
               })
               .catch((err) => {
-                if (err instanceof DevBMSRessourceNotFoundError)
-                  /* TODO: Continue here and provide 404 */
-                  console.log("Requested ressource not found!");
-
-                console.log(err);
+                if (err instanceof DevBMSRessourceNotFoundError) {
+                  console.log(
+                    '[dev-bms:http-server] 404 Not Found "' +
+                      err.ressource +
+                      '"'
+                  );
+                  response.writeHead(404, { "Content-Type": "text/plain" });
+                  response.write("Not Found!\n");
+                  response.end();
+                } else {
+                  console.log(err);
+                  try {
+                    response.writeHead(500, { "Content-Type": "text/plain" });
+                    response.write("Server Error\n");
+                    response.end();
+                  } catch (fail) {
+                    console.log(fail);
+                  }
+                }
               });
           }
         )
