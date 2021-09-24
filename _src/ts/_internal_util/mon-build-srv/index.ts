@@ -9,7 +9,7 @@ import { DevBMSConfigError } from "../errors";
 
 const EXIT_NODEMON_FAILURE = 3;
 
-function setupNodemon(nodemonConfigFile: string): Promise<boolean> {
+function setupNodemon(nodemonConfigFile: string): Promise<void> {
   return new Promise((resolve, reject) => {
     console.log("Setting up Nodemon...");
 
@@ -21,6 +21,9 @@ function setupNodemon(nodemonConfigFile: string): Promise<boolean> {
           .on("start", () => {
             console.log("[nodemon] started...");
           })
+          .on("exit", () => {
+            console.log("[nodemon] command finished!");
+          })
           .on("quit", () => {
             console.log("[nodemon] stopped...");
             process.exit();
@@ -28,7 +31,8 @@ function setupNodemon(nodemonConfigFile: string): Promise<boolean> {
           .on("restart", (files) => {
             console.log("[nodemon] restarted due to: ", files);
           });
-        return resolve(true);
+
+        return resolve();
       })
       .catch((err) => {
         return reject(err);
