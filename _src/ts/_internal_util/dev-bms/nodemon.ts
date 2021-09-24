@@ -7,25 +7,23 @@ import { DevBMSConfigError } from "../errors";
 
 export function launchNodemon(nodemonConfigFile: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    console.log("Setting up Nodemon...");
-
     readNodemonConfig(nodemonConfigFile)
       .then((nodemon_conf) => {
         nodemon(nodemon_conf);
 
         nodemon
           .on("start", () => {
-            console.log("[nodemon] started...");
+            console.log("[dev-bms:nodemon] started...");
           })
           .on("exit", () => {
-            console.log("[nodemon] command finished!");
+            console.log("[dev-bms:nodemon] command finished!");
           })
           .on("quit", () => {
-            console.log("[nodemon] stopped...");
+            console.log("[dev-bms:nodemon] stopped...");
             process.exit();
           })
           .on("restart", (files) => {
-            console.log("[nodemon] restarted due to: ", files);
+            console.log("[dev-bms:nodemon] restarted due to: ", files);
           });
 
         return resolve();

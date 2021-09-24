@@ -30,10 +30,14 @@ function main(): void {
       process.exit(EXIT_NODEMON_FAILURE);
     });
 
-    launchHttpServer().catch((err) => {
-      console.log(err);
-      process.exit(EXIT_HTTPSERVER_FAILURE);
-    });
+    launchHttpServer()
+      .then(() => {
+        console.log("[dev-bms:http-server] started...");
+      })
+      .catch((err) => {
+        console.log(err);
+        process.exit(EXIT_HTTPSERVER_FAILURE);
+      });
   }
 }
 
