@@ -3,8 +3,10 @@ import stdio = require("stdio");
 
 /* project files */
 import { launchNodemon } from "./nodemon";
+import { launchHttpServer } from "./http-server";
 
 const EXIT_NODEMON_FAILURE = 3;
+const EXIT_HTTPSERVER_FAILURE = 4;
 
 function main(): void {
   const options = stdio.getopt({
@@ -26,6 +28,11 @@ function main(): void {
     launchNodemon(options.nodemonConf.toString()).catch((err) => {
       console.log(err);
       process.exit(EXIT_NODEMON_FAILURE);
+    });
+
+    launchHttpServer().catch((err) => {
+      console.log(err);
+      process.exit(EXIT_HTTPSERVER_FAILURE);
     });
   }
 }
