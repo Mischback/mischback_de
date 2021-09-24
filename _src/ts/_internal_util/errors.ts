@@ -45,3 +45,9 @@ export class DevBMSConfigError extends DevBMSError {
     super(message);
   }
 }
+
+export class DevBMSServerError extends DevBMSError {
+  constructor(message: string) {
+    super(message);
+  }
+}

@@ -1,62 +1,10 @@
 /* NodeJS modules */
-import nodemon = require("nodemon");
-import fs = require("fs");
-//import path = require("path");
 import stdio = require("stdio");
 
 /* project files */
-import { DevBMSConfigError } from "../errors";
+import { launchNodemon } from "./nodemon";
 
 const EXIT_NODEMON_FAILURE = 3;
-
-function setupNodemon(nodemonConfigFile: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    console.log("Setting up Nodemon...");
-
-    readNodemonConfig(nodemonConfigFile)
-      .then((nodemon_conf) => {
-        nodemon(nodemon_conf);
-
-        nodemon
-          .on("start", () => {
-            console.log("[nodemon] started...");
-          })
-          .on("exit", () => {
-            console.log("[nodemon] command finished!");
-          })
-          .on("quit", () => {
-            console.log("[nodemon] stopped...");
-            process.exit();
-          })
-          .on("restart", (files) => {
-            console.log("[nodemon] restarted due to: ", files);
-          });
-
-        return resolve();
-      })
-      .catch((err) => {
-        return reject(err);
-      });
-  });
-}
-
-function readNodemonConfig(nodemonConfigFile: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    fs.readFile(nodemonConfigFile, (err, data) => {
-      if (err) return reject(err);
-
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const nodemon_conf = JSON.parse(data.toString());
-        return resolve(nodemon_conf);
-      } catch {
-        return reject(
-          new DevBMSConfigError("Could not parse nodemon configuration")
-        );
-      }
-    });
-  });
-}
 
 function main(): void {
   const options = stdio.getopt({
@@ -75,7 +23,7 @@ function main(): void {
   });
 
   if (options !== null) {
-    setupNodemon(options.nodemonConf.toString()).catch((err) => {
+    launchNodemon(options.nodemonConf.toString()).catch((err) => {
       console.log(err);
       process.exit(EXIT_NODEMON_FAILURE);
     });
