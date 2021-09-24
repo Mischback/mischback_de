@@ -5,7 +5,7 @@ import path = require("path");
 import fs = require("fs");
 
 /* project files */
-import { DevBMSServerError } from "../errors";
+import { DevBMSServerError, DevBMSRessourceNotFoundError } from "../errors";
 
 function getUriFromRequest(request: http.IncomingMessage): Promise<string> {
   return new Promise((resolve, _reject) => {
@@ -32,7 +32,11 @@ function determineRessourceFromUri(
         return resolve(ressource);
       }
     } catch {
-      return reject(new DevBMSServerError("Could not determine ressource"));
+      return reject(
+        new DevBMSRessourceNotFoundError(
+          "Could not determine ressource:" + ressource
+        )
+      );
     }
   });
 }
@@ -54,6 +58,9 @@ export function launchHttpServer(): Promise<void> {
                 console.log("[debug] determined this ressource: ", ressource);
               })
               .catch((err) => {
+                if (err instanceof DevBMSRessourceNotFoundError)
+                  console.log("Requested ressource not found!");
+
                 console.log(err);
               });
 

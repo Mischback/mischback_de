@@ -51,3 +51,9 @@ export class DevBMSServerError extends DevBMSError {
     super(message);
   }
 }
+
+export class DevBMSRessourceNotFoundError extends DevBMSError {
+  constructor(message: string) {
+    super(message);
+  }
+}
