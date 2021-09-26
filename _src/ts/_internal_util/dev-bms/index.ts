@@ -22,6 +22,18 @@ function main(): void {
       args: 1,
       default: "./",
     },
+    serverAddress: {
+      description: "Serve http at this address",
+      required: false,
+      args: 1,
+      default: "127.0.0.1",
+    },
+    serverPort: {
+      description: "Serve http at this port",
+      required: false,
+      args: 1,
+      default: "8000",
+    },
   });
 
   if (options !== null) {
@@ -30,14 +42,14 @@ function main(): void {
       process.exit(EXIT_NODEMON_FAILURE);
     });
 
-    launchHttpServer()
-      .then(() => {
-        console.log("[dev-bms:http-server] started...");
-      })
-      .catch((err) => {
-        console.log(err);
-        process.exit(EXIT_HTTPSERVER_FAILURE);
-      });
+    launchHttpServer(
+      options.webRoot.toString(),
+      options.serverAddress.toString(),
+      parseInt(options.serverPort.toString())
+    ).catch((err) => {
+      console.log(err);
+      process.exit(EXIT_HTTPSERVER_FAILURE);
+    });
   }
 }
 

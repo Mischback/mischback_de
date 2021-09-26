@@ -50,13 +50,13 @@ function determineRessourceFromUri(
   });
 }
 
-export function launchHttpServer(): Promise<void> {
+export function launchHttpServer(
+  webRoot: string,
+  host: string,
+  port: number
+): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
-      const port = 8000;
-      const host = "0.0.0.0";
-      const webRoot = "_site";
-
       http
         .createServer(
           (request: http.IncomingMessage, response: http.ServerResponse) => {
@@ -110,7 +110,15 @@ export function launchHttpServer(): Promise<void> {
               });
           }
         )
-        .listen(port, host);
+        .listen(port, host, () => {
+          console.log(
+            "[dev-bms:http-server] Launched server on " +
+              host +
+              ":" +
+              port.toString() +
+              "..."
+          );
+        });
 
       return resolve();
     } catch {

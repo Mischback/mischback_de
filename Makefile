@@ -112,9 +112,6 @@ build/development :
 	$(MAKE) $(STAMP_BUILD_COMPLETED)
 .PHONY : build/development
 
-# Shortcut to build with development settings
-dev : build/development
-.PHONY : dev
 
 # Build the whole project
 # This recipy by itsself actually executes Jekyll's build command. The recipe's
@@ -231,9 +228,16 @@ $(STAMP_NODE_INSTALL) : package.json
 $(PROJECT_UTILITY_SCRIPTS) : $(shell find $(SRC_ASSETS)/ts/_internal_util -type f) tsconfig.internal_util.json | $(STAMP_NODE_INSTALL)
 	echo "[utility] building project utilities..."
 	npx tsc --project tsconfig.internal_util.json
+	touch $@
 
 utility : $(PROJECT_UTILITY_SCRIPTS)
 .PHONY : utility
+
+dev :
+	BUILD_MODE=$(DEVELOPMENT_FLAG) \
+	node $(PROJECT_UTILITY_SCRIPTS)/dev-bms --webRoot $(BUILD_DIR) --serverAddress "0.0.0.0" --serverPort "4000"
+.PHONY : dev
+
 
 # Shortcut to install Ruby gems, NodeJS packages and build the project's utility
 # scripts.
