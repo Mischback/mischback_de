@@ -1,0 +1,6 @@
+{
+  "exec": "make build/development",
+  "ext": "css,scss,ts,html",
+  "verbose": true,
+  "watch": ["_src", "content", "_includes", "_layouts"]
+}

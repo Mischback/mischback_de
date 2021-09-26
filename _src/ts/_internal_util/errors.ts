@@ -33,3 +33,29 @@ export class BustedManifestHashError extends BustedManifestError {
     super(message);
   }
 }
+
+class DevBMSError extends InternalUtilError {
+  constructor(message: string) {
+    super(message);
+  }
+}
+
+export class DevBMSConfigError extends DevBMSError {
+  constructor(message: string) {
+    super(message);
+  }
+}
+
+export class DevBMSServerError extends DevBMSError {
+  constructor(message: string) {
+    super(message);
+  }
+}
+
+export class DevBMSRessourceNotFoundError extends DevBMSError {
+  ressource: string;
+  constructor(message: string, ressource: string) {
+    super(message);
+    this.ressource = ressource;
+  }
+}

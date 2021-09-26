@@ -112,9 +112,6 @@ build/development :
 	$(MAKE) $(STAMP_BUILD_COMPLETED)
 .PHONY : build/development
 
-# Shortcut to build with development settings
-dev : build/development
-.PHONY : dev
 
 # Build the whole project
 # This recipy by itsself actually executes Jekyll's build command. The recipe's
@@ -126,7 +123,7 @@ dev : build/development
 # Please note that Jekyll's build command will in fact create multiple files,
 # depending on your content.
 # TODO: Add Jekyll-specific prerequisites, e.g. "_includes", "_layouts", ...
-$(STAMP_BUILD_COMPLETED) : $(SRC_CONTENT_FILES) $(STAMP_ASSETS_READY) $(JEKYLL_LAYOUTS) $(JEYKYLL_INCLUDES) $(JEKYLL_CONFIG) | $(STAMP_JEKYLL_INSTALL)
+$(STAMP_BUILD_COMPLETED) : $(SRC_CONTENT_FILES) $(STAMP_ASSETS_READY) $(JEKYLL_LAYOUTS) $(JEKYLL_INCLUDES) $(JEKYLL_CONFIG) | $(STAMP_JEKYLL_INSTALL)
 	echo "[any] running Jekyll build process..."
 	$(create_dir)
 	bundle exec jekyll build
@@ -231,6 +228,16 @@ $(STAMP_NODE_INSTALL) : package.json
 $(PROJECT_UTILITY_SCRIPTS) : $(shell find $(SRC_ASSETS)/ts/_internal_util -type f) tsconfig.internal_util.json | $(STAMP_NODE_INSTALL)
 	echo "[utility] building project utilities..."
 	npx tsc --project tsconfig.internal_util.json
+	touch $@
+
+utility : $(PROJECT_UTILITY_SCRIPTS)
+.PHONY : utility
+
+dev :
+	BUILD_MODE=$(DEVELOPMENT_FLAG) \
+	node $(PROJECT_UTILITY_SCRIPTS)/dev-bms --webRoot $(BUILD_DIR) --serverAddress "0.0.0.0" --serverPort "4000"
+.PHONY : dev
+
 
 # Shortcut to install Ruby gems, NodeJS packages and build the project's utility
 # scripts.
@@ -265,7 +272,7 @@ tree/project :
 .PHONY : tree/project
 
 tree/content :
-	tree -a -I ".editorconfig|.eslintrc.json|.gitignore|.lintstagedrc.json|.prettierignore|.prettierrc.json|.stylelintignore|.stylelintrc.json|Gemfile|Gemfile.lock|package-lock.json|package.json|postcss.config.js|tsconfig.development.json|tsconfig.internal_util.json|tsconfig.json|tsconfig.production.json|_util|_internal_util|.bundle|.git|.husky|.jekyll-cache|.make-stamps|node_modules|.sass-cache|vendor|.vscode" --dirsfirst -c
+	tree -a -I ".editorconfig|.eslintrc.json|.gitignore|.lintstagedrc.json|.prettierignore|.prettierrc.json|.stylelintignore|.stylelintrc.json|Gemfile|Gemfile.lock|nodemon.json|package-lock.json|package.json|postcss.config.js|tsconfig.development.json|tsconfig.internal_util.json|tsconfig.json|tsconfig.production.json|_util|_internal_util|.bundle|.git|.husky|.jekyll-cache|.make-stamps|node_modules|.sass-cache|vendor|.vscode" --dirsfirst -c
 .PHONY : tree/content
 
 tree : tree/content
