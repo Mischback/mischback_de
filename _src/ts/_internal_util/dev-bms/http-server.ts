@@ -7,6 +7,9 @@ import fs = require("fs");
 /* project files */
 import { DevBMSServerError, DevBMSRessourceNotFoundError } from "../errors";
 
+/* This dictionary is used for look ups of MIME types, based on the requested
+ * source filetype.
+ */
 const mimeTypes: { [id: string]: string } = {
   ".html": "text/html",
   ".js": "text/javascript",
@@ -19,9 +22,10 @@ const mimeTypes: { [id: string]: string } = {
 };
 
 function getUriFromRequest(request: http.IncomingMessage): Promise<string> {
+  /* Return the URI from the request */
   return new Promise((resolve, _reject) => {
     const url = request.url ? request.url : "/";
-    // console.log("[debug] requested url: ", url);
+
     return resolve(url);
   });
 }
@@ -30,6 +34,13 @@ function determineRessourceFromUri(
   uri: string,
   webRoot: string
 ): Promise<string> {
+  /* Map the requested URI to an actual ressource on the filesystem.
+   *
+   * The existence of the ressource is verified using lstatSync. If the
+   * ressource is a directory, (which might be the usual case, depending on
+   * the structure of the project's permalinks), "index.html" is automatically
+   * appended to determine the actual HTML source file.
+   */
   return new Promise((resolve, reject) => {
     const ressource = path.join(webRoot, uri);
     // console.log("[debug] assumed ressource: ", ressource);
@@ -55,6 +66,17 @@ export function launchHttpServer(
   host: string,
   port: number
 ): Promise<void> {
+  /* Handle the complete HTTP request/response cycle.
+   *
+   * After determining the requested ressource, the corresponding file is opened
+   * using "fs.createReadStream()", and its data is directly streamed to the
+   * response. This implementation ensures the functionality for (very) big
+   * files.
+   *
+   * Basically this server only provides 200/404 responses.
+   *
+   * DO NOT USE THIS IN A PRODUCTION ENVIRONMENT!
+   */
   return new Promise((resolve, reject) => {
     try {
       http

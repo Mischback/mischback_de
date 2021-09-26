@@ -9,6 +9,7 @@ const EXIT_NODEMON_FAILURE = 3;
 const EXIT_HTTPSERVER_FAILURE = 4;
 
 function main(): void {
+  /* setup of command line options */
   const options = stdio.getopt({
     nodemonConf: {
       description: "Use this config file for nodemon",
@@ -37,11 +38,14 @@ function main(): void {
   });
 
   if (options !== null) {
+    /* Launch nodemon to monitor source directories and trigger rebuilding of
+     * the actual project. */
     launchNodemon(options.nodemonConf.toString()).catch((err) => {
       console.log(err);
       process.exit(EXIT_NODEMON_FAILURE);
     });
 
+    /* Launch the http-server on a given address and port */
     launchHttpServer(
       options.webRoot.toString(),
       options.serverAddress.toString(),

@@ -6,6 +6,13 @@ import nodemon = require("nodemon");
 import { DevBMSConfigError } from "../errors";
 
 export function launchNodemon(nodemonConfigFile: string): Promise<void> {
+  /* Launch nodemon to monitor the project's source files/folders and trigger
+   * rebuilds.
+   *
+   * Nothing fancy here, nodemon is basically used as out-of-the-box as possible.
+   * The actual nodemon configuration is provided in the external configuration
+   * file "nodemon.json".
+   */
   return new Promise((resolve, reject) => {
     readNodemonConfig(nodemonConfigFile)
       .then((nodemon_conf) => {
@@ -35,6 +42,7 @@ export function launchNodemon(nodemonConfigFile: string): Promise<void> {
 }
 
 function readNodemonConfig(nodemonConfigFile: string): Promise<string> {
+  /* Read "nodemon.json" and return the JSON object. */
   return new Promise((resolve, reject) => {
     fs.readFile(nodemonConfigFile, (err, data) => {
       if (err) return reject(err);
