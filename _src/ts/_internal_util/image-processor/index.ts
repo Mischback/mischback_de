@@ -28,6 +28,18 @@ function main(): void {
       required: false,
       default: false,
     },
+    inputFile: {
+      description: "Path/filename of the input file",
+      key: "i",
+      required: true,
+      args: 1,
+    },
+    outputDir: {
+      description: "Path of the output directory",
+      key: "o",
+      required: true,
+      args: 1,
+    },
   });
 
   if (options !== null) {
@@ -41,6 +53,8 @@ function main(): void {
     }
 
     logger.debug("Config: " + options.configFile.toString());
+    logger.debug("inputFile: " + options.inputFile.toString());
+    logger.debug("outputDir: " + options.outputDir.toString());
   }
 }
 
