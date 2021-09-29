@@ -1,10 +1,24 @@
 /* NodeJS imports */
-import { readFileSync } from "fs";
+import { createReadStream, readFileSync } from "fs";
+import { basename, extname, join } from "path";
+const sharp = require("sharp");
 import { getopt } from "stdio";
 import { Logger } from "tslog";
 
 const EXIT_SUCCESS = 0;
 const EXIT_IMAGE_PROCESSOR_FAILURE = 6;
+
+interface extensionsDict {
+  [index: string]: string;
+}
+
+const fileExtensions: extensionsDict = {
+  "gif": ".gif",
+  "jpeg": ".jpg",
+  "jpg": ".jpg",
+  "png": ".png",
+  "webp": ".webp",
+};
 
 /* setting up the logger */
 const logger = new Logger({
@@ -22,12 +36,71 @@ function sharpWrapper(
   inputFile: string,
   outputDir: string
 ): Promise<void> {
-  logger.debug(config);
-  logger.debug(inputFile);
-  logger.debug(outputDir);
 
-  return new Promise((resolve) => {
-    return resolve();
+  return new Promise((resolve, reject) => {
+    const sharpStream = new sharp({
+      failOnError: true
+    });
+
+    const sharpPipes: any[] = [];
+
+    const fileBasename = basename(inputFile, extname(inputFile));
+
+    Object.keys(config.target_types).forEach((t) => {
+
+      const filetype = t.toString().toLowerCase();
+      const filetype_options = config.target_types[t];
+      const filetype_extension = fileExtensions[filetype];
+
+      Object.keys(config.target_dimensions).forEach((d) => {
+        const dim = config.target_dimensions[d];
+
+        let pipe = sharpStream.clone();
+
+        let newFilename: string;
+
+        if (dim.mode !== "full") {
+          if (dim.mode === "width")
+            pipe = pipe.resize({ width: dim.width });
+          if (dim.mode === "height")
+            pipe = pipe.resize({ height: dim.height });
+
+          newFilename = fileBasename + dim.filenameSuffix + filetype_extension;
+        } else {
+          newFilename = fileBasename + filetype_extension;
+        }
+
+        pipe = pipe
+          .toFormat(filetype, filetype_options)
+          .toFile(join(outputDir, newFilename));
+
+        logger.debug("Built pipe to create \"" + newFilename + "\" from \"" + inputFile + "\"...");
+
+        sharpPipes.push(pipe);
+      });
+    });
+
+    const readStream = createReadStream(inputFile);
+    readStream.on("open", () => {
+      logger.debug("Opened \"" + inputFile + "\" and piping into Sharp...");
+      readStream.pipe(sharpStream);
+    });
+    readStream.on("error", (err) => {
+      logger.error("Error while reading input stream:");
+      logger.fatal(err);
+      return reject("foo");
+    });
+
+    Promise.all(sharpPipes)
+      .then(() => {
+        logger.debug("Processed all pipes for source file \"" + inputFile + "\"...");
+        return resolve();
+      })
+      .catch((err) => {
+        logger.error("Error while processing the pipes...");
+        logger.fatal(err);
+        return reject("foo");
+      });
   });
 }
 
