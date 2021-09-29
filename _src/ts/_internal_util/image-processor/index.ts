@@ -1,6 +1,10 @@
 /* NodeJS imports */
+import { readFileSync } from "fs";
 import { getopt } from "stdio";
 import { Logger } from "tslog";
+
+const EXIT_SUCCESS = 0;
+const EXIT_IMAGE_PROCESSOR_FAILURE = 6;
 
 /* setting up the logger */
 const logger = new Logger({
@@ -12,6 +16,20 @@ const logger = new Logger({
   displayFunctionName: false,
   displayFilePath: "hidden",
 });
+
+function sharpWrapper(
+  config: any,
+  inputFile: string,
+  outputDir: string
+): Promise<void> {
+  logger.debug(config);
+  logger.debug(inputFile);
+  logger.debug(outputDir);
+
+  return new Promise((resolve) => {
+    return resolve();
+  });
+}
 
 function main(): void {
   const options = getopt({
@@ -52,9 +70,34 @@ function main(): void {
       });
     }
 
+    logger.debug("Running with the following configuration options:");
     logger.debug("Config: " + options.configFile.toString());
     logger.debug("inputFile: " + options.inputFile.toString());
     logger.debug("outputDir: " + options.outputDir.toString());
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const config = JSON.parse(
+      readFileSync(options.configFile.toString(), "utf-8")
+    );
+
+    sharpWrapper(
+      config,
+      options.inputFile.toString(),
+      options.outputDir.toString()
+    )
+      .then(() => {
+        logger.info(
+          'Finished processing of input file "' +
+            options.inputFile.toString() +
+            '"!'
+        );
+        process.exit(EXIT_SUCCESS);
+      })
+      .catch((err) => {
+        logger.fatal("Something went terribly wrong!");
+        logger.trace(err);
+        process.exit(EXIT_IMAGE_PROCESSOR_FAILURE);
+      });
   }
 }
 
