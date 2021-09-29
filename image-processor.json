@@ -5,6 +5,14 @@
       "compressionLevel": 6,
       "quality": 100,
       "force": true
+    },
+    "webp": {
+      "quality": 80,
+      "alphaQuality": 100,
+      "lossless": false,
+      "nearLossless": false,
+      "reductionEffort": 4,
+      "force": true
     }
   },
   "target_dimensions": {
