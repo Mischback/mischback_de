@@ -272,7 +272,7 @@ tree/project :
 .PHONY : tree/project
 
 tree/content :
-	tree -a -I ".editorconfig|.eslintrc.json|.gitignore|.lintstagedrc.json|.prettierignore|.prettierrc.json|.stylelintignore|.stylelintrc.json|Gemfile|Gemfile.lock|nodemon.json|package-lock.json|package.json|postcss.config.js|tsconfig.development.json|tsconfig.internal_util.json|tsconfig.json|tsconfig.production.json|_util|_internal_util|.bundle|.git|.husky|.jekyll-cache|.make-stamps|node_modules|.sass-cache|vendor|.vscode" --dirsfirst -c
+	tree -a -I ".editorconfig|.eslintrc.json|.gitignore|.lintstagedrc.json|.prettierignore|.prettierrc.json|.stylelintignore|.stylelintrc.json|Gemfile|Gemfile.lock|image-processor.json|nodemon.json|package-lock.json|package.json|postcss.config.js|tsconfig.development.json|tsconfig.internal_util.json|tsconfig.json|tsconfig.production.json|_util|_internal_util|.bundle|.git|.husky|.jekyll-cache|.make-stamps|node_modules|.sass-cache|vendor|.vscode" --dirsfirst -c
 .PHONY : tree/content
 
 tree : tree/content
