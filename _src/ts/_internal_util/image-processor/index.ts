@@ -21,25 +21,18 @@ const logger = new Logger({
   displayFilePath: "hidden",
 });
 
-function buildSharpPipe(
+function buildPipe(
   sharpPipeEntry: sharp.Sharp,
   fileBasename: string,
-  outputDir: string
+  outputDir: string,
+  targetFormat: string
 ): sharp.Sharp {
+  logger.silly(targetFormat);
   let pipe = sharpPipeEntry.clone();
 
   pipe = pipe.resize({ width: 200 });
 
-  let newFilename: string;
-  /* The next line is just for testing, will be removed in the real
-   * implementation anyway.
-   */
-  // eslint-disable-next-line no-constant-condition
-  if (1 === 1) {
-    newFilename = fileBasename + "-small" + ".jpg";
-  } else {
-    newFilename = fileBasename + ".jpg";
-  }
+  const newFilename = fileBasename + ".jpg";
 
   pipe = pipe.toFormat("jpeg");
 
@@ -52,7 +45,7 @@ function buildSharpPipe(
   // @ts-ignore
   pipe = pipe.toFile(join(outputDir, newFilename));
 
-  logger.debug("Built pipe...");
+  logger.debug('Built pipe for "' + newFilename + '"');
 
   return pipe;
 }
@@ -60,19 +53,47 @@ function buildSharpPipe(
 function buildSharpPipes(
   sharpPipeEntry: sharp.Sharp,
   fileBasename: string,
-  outputDir: string
+  outputDir: string,
+  config: any
 ): Promise<sharp.Sharp[]> {
-  return new Promise((resolve, _reject) => {
+  return new Promise((resolve, reject) => {
     const sharpPipes: sharp.Sharp[] = [];
 
-    // TODO: loop through config here!
-    sharpPipes.push(buildSharpPipe(sharpPipeEntry, fileBasename, outputDir));
+    try {
+      for (let target in config.targets) {
+        logger.debug(target);
+
+        const newFileBasename = config.targets[target].filenameSuffix
+          ? fileBasename + config.targets[target].filenameSuffix
+          : fileBasename;
+
+        for (let f in config.targets[target].formats) {
+          logger.debug(config.targets[target].formats[f]);
+
+          sharpPipes.push(
+            buildPipe(
+              sharpPipeEntry,
+              newFileBasename,
+              outputDir,
+              config.targets[target].formats[f]
+            )
+          );
+        }
+      }
+    } catch (err) {
+      logger.error("Config does not provide targets!");
+      return reject("foobar");
+    }
 
     return resolve(sharpPipes);
   });
 }
 
-function sharpWrapper(inputFile: string, outputDir: string): Promise<void> {
+function sharpWrapper(
+  inputFile: string,
+  outputDir: string,
+  config: any
+): Promise<void> {
   return new Promise((resolve, reject) => {
     const sharpPipeEntry = sharp({
       failOnError: true,
@@ -80,7 +101,7 @@ function sharpWrapper(inputFile: string, outputDir: string): Promise<void> {
 
     const fileBasename = basename(inputFile, extname(inputFile));
 
-    buildSharpPipes(sharpPipeEntry, fileBasename, outputDir)
+    buildSharpPipes(sharpPipeEntry, fileBasename, outputDir, config)
       .then((sharpPipes) => {
         const readStream = createReadStream(inputFile);
         readStream.on("open", () => {
@@ -157,9 +178,12 @@ function main(): void {
     const config = JSON.parse(
       readFileSync(options.configFile.toString(), "utf-8")
     );
-    logger.debug(config);
 
-    sharpWrapper(options.inputFile.toString(), options.outputDir.toString())
+    sharpWrapper(
+      options.inputFile.toString(),
+      options.outputDir.toString(),
+      config
+    )
       .then(() => {
         logger.info("Successfully processed image!");
         process.exit(EXIT_SUCCESS);
