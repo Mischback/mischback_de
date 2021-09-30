@@ -21,20 +21,33 @@ const logger = new Logger({
   displayFilePath: "hidden",
 });
 
+const TargetFormatExtensions: { [index: string]: string } = {
+  gif: ".gif",
+  jpeg: ".jpg",
+  jpg: ".jpg",
+  png: ".png",
+  webp: ".webp",
+};
+
 function buildPipe(
   sharpPipeEntry: sharp.Sharp,
   fileBasename: string,
   outputDir: string,
   targetFormat: string
 ): sharp.Sharp {
-  logger.silly(targetFormat);
   let pipe = sharpPipeEntry.clone();
 
   pipe = pipe.resize({ width: 200 });
 
-  const newFilename = fileBasename + ".jpg";
+  const newFilename = fileBasename + TargetFormatExtensions[targetFormat];
 
-  pipe = pipe.toFormat("jpeg");
+  let targetSharpFormat: keyof sharp.FormatEnum;
+  if (targetFormat in sharp.format)
+    targetSharpFormat = targetFormat as keyof sharp.FormatEnum;
+  else {
+    throw "Unknown target format!";
+  }
+  pipe = pipe.toFormat(targetSharpFormat);
 
   /* The following line is ignored from TypeScript checks, because they
    * find, that the Promise is not fully populated. Indeed, it will be
@@ -59,17 +72,17 @@ function buildSharpPipes(
   return new Promise((resolve, reject) => {
     const sharpPipes: sharp.Sharp[] = [];
 
-    try {
-      for (let target in config.targets) {
-        logger.debug(target);
+    for (let target in config.targets) {
+      logger.debug(target);
 
-        const newFileBasename = config.targets[target].filenameSuffix
-          ? fileBasename + config.targets[target].filenameSuffix
-          : fileBasename;
+      const newFileBasename = config.targets[target].filenameSuffix
+        ? fileBasename + config.targets[target].filenameSuffix
+        : fileBasename;
 
-        for (let f in config.targets[target].formats) {
-          logger.debug(config.targets[target].formats[f]);
+      for (let f in config.targets[target].formats) {
+        logger.debug(config.targets[target].formats[f]);
 
+        try {
           sharpPipes.push(
             buildPipe(
               sharpPipeEntry,
@@ -78,11 +91,12 @@ function buildSharpPipes(
               config.targets[target].formats[f]
             )
           );
+        } catch (err) {
+          logger.error("Error during building the pipes!");
+          logger.fatal(err);
+          return reject("foobar");
         }
       }
-    } catch (err) {
-      logger.error("Config does not provide targets!");
-      return reject("foobar");
     }
 
     return resolve(sharpPipes);
