@@ -21,6 +21,42 @@ const logger = new Logger({
   displayFilePath: "hidden",
 });
 
+function buildSharpPipe(
+  sharpPipeEntry: sharp.Sharp,
+  fileBasename: string,
+  outputDir: string
+): sharp.Sharp {
+  let pipe = sharpPipeEntry.clone();
+
+  pipe = pipe.resize({ width: 200 });
+
+  let newFilename: string;
+  /* The next line is just for testing, will be removed in the real
+   * implementation anyway.
+   */
+  // eslint-disable-next-line no-constant-condition
+  if (1 === 1) {
+    newFilename = fileBasename + "-small" + ".jpg";
+  } else {
+    newFilename = fileBasename + ".jpg";
+  }
+
+  pipe = pipe.toFormat("jpeg");
+
+  /* The following line is ignored from TypeScript checks, because they
+   * find, that the Promise is not fully populated. Indeed, it will be
+   * fully populated, but TypeScript does not know this, because the call
+   * to "toFormat()" is performed with a variable filetype.
+   */
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  pipe = pipe.toFile(join(outputDir, newFilename));
+
+  logger.debug("Built pipe...");
+
+  return pipe;
+}
+
 function buildSharpPipes(
   sharpPipeEntry: sharp.Sharp,
   fileBasename: string,
@@ -29,35 +65,8 @@ function buildSharpPipes(
   return new Promise((resolve, _reject) => {
     const sharpPipes: sharp.Sharp[] = [];
 
-    let pipe = sharpPipeEntry.clone();
-
-    pipe = pipe.resize({ width: 200 });
-
-    let newFilename: string;
-    /* The next line is just for testing, will be removed in the real
-     * implementation anyway.
-     */
-    // eslint-disable-next-line no-constant-condition
-    if (1 === 1) {
-      newFilename = fileBasename + "-small" + ".jpg";
-    } else {
-      newFilename = fileBasename + ".jpg";
-    }
-
-    pipe = pipe.toFormat("jpeg");
-
-    /* The following line is ignored from TypeScript checks, because they
-     * find, that the Promise is not fully populated. Indeed, it will be
-     * fully populated, but TypeScript does not know this, because the call
-     * to "toFormat()" is performed with an variable filetype.
-     */
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    pipe = pipe.toFile(join(outputDir, newFilename));
-
-    logger.debug("Built pipe...");
-
-    sharpPipes.push(pipe);
+    // TODO: loop through config here!
+    sharpPipes.push(buildSharpPipe(sharpPipeEntry, fileBasename, outputDir));
 
     return resolve(sharpPipes);
   });
