@@ -1,5 +1,19 @@
 {
-  "target_types": {
+  "targets": {
+    "full": {
+      "mode": "do_not_scale",
+      "filenameSuffix": "",
+      "formats": ["png"]
+    },
+    "small": {
+      "mode": "keep-aspect",
+      "width": 200,
+      "height": 200,
+      "filenameSuffix": "-small",
+      "formats": ["png", "webp", "jpg"]
+    }
+  },
+  "formatOptions": {
     "png": {
       "progression": false,
       "compressionLevel": 6,
@@ -13,16 +27,6 @@
       "nearLossless": false,
       "reductionEffort": 4,
       "force": true
-    }
-  },
-  "target_dimensions": {
-    "full": {
-      "mode": "full"
-    },
-    "small": {
-      "mode": "width",
-      "width": 200,
-      "filenameSuffix": "-small"
     }
   }
 }
