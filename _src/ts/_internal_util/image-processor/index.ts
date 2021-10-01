@@ -87,19 +87,29 @@ function buildSharpPipes(
         ? fileBasename + targetConfig[target].filenameSuffix
         : fileBasename;
 
-      targetConfig[target].formats.forEach((f: targetFormats) => {
-        logger.debug("format loop: " + f);
+      try {
+        targetConfig[target].formats.forEach((f: targetFormats) => {
+          logger.debug("format loop: " + f);
 
-        try {
-          sharpPipes.push(
-            buildPipe(sharpPipeEntry, newFileBasename, outputDir, f)
-          );
-        } catch (err) {
-          logger.error("Error during building the pipes!");
-          logger.fatal(err);
+          try {
+            sharpPipes.push(
+              buildPipe(sharpPipeEntry, newFileBasename, outputDir, f)
+            );
+          } catch (err) {
+            logger.error("Error during building the pipes!");
+            logger.fatal(err);
+            return reject("foobar");
+          }
+        });
+      } catch (err) {
+        if (err instanceof TypeError) {
+          logger.fatal("Could not extract target formats!");
           return reject("foobar");
+        } else {
+          logger.error(err);
+          return reject("Unknown error!");
         }
-      });
+      }
     }
 
     return resolve(sharpPipes);
@@ -215,8 +225,8 @@ function main(): void {
           });
       })
       .catch((err) => {
-        logger.error("Could not parse configuration file!");
         logger.error(err);
+        logger.fatal("Could not parse configuration file!");
         process.exit(EXIT_IMAGE_PROCESSOR_FAILURE);
       });
   }
