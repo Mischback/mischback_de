@@ -7,6 +7,13 @@ import { Logger } from "tslog";
 /// <reference types="sharp" />
 import sharp = require("sharp");
 
+import {
+  parseConfig,
+  targetConfig,
+  targetFormats,
+  ImageProcessorConfig,
+} from "./configuration";
+
 const EXIT_SUCCESS = 0;
 const EXIT_IMAGE_PROCESSOR_FAILURE = 6;
 
@@ -35,18 +42,19 @@ function buildPipe(
   outputDir: string,
   targetFormat: string
 ): sharp.Sharp {
-  let pipe = sharpPipeEntry.clone();
-
-  pipe = pipe.resize({ width: 200 });
-
-  const newFilename = fileBasename + TargetFormatExtensions[targetFormat];
-
   let targetSharpFormat: keyof sharp.FormatEnum;
   if (targetFormat in sharp.format)
     targetSharpFormat = targetFormat as keyof sharp.FormatEnum;
   else {
     throw "Unknown target format!";
   }
+
+  const newFilename = fileBasename + TargetFormatExtensions[targetFormat];
+
+  let pipe = sharpPipeEntry.clone();
+
+  pipe = pipe.resize({ width: 200 });
+
   pipe = pipe.toFormat(targetSharpFormat);
 
   /* The following line is ignored from TypeScript checks, because they
@@ -67,36 +75,31 @@ function buildSharpPipes(
   sharpPipeEntry: sharp.Sharp,
   fileBasename: string,
   outputDir: string,
-  config: any
+  targetConfig: targetConfig
 ): Promise<sharp.Sharp[]> {
   return new Promise((resolve, reject) => {
     const sharpPipes: sharp.Sharp[] = [];
 
-    for (let target in config.targets) {
-      logger.debug(target);
+    for (const target in targetConfig) {
+      logger.debug("target loop: " + target);
 
-      const newFileBasename = config.targets[target].filenameSuffix
-        ? fileBasename + config.targets[target].filenameSuffix
+      const newFileBasename = targetConfig[target].filenameSuffix
+        ? fileBasename + targetConfig[target].filenameSuffix
         : fileBasename;
 
-      for (let f in config.targets[target].formats) {
-        logger.debug(config.targets[target].formats[f]);
+      targetConfig[target].formats.forEach((f: targetFormats) => {
+        logger.debug("format loop: " + f);
 
         try {
           sharpPipes.push(
-            buildPipe(
-              sharpPipeEntry,
-              newFileBasename,
-              outputDir,
-              config.targets[target].formats[f]
-            )
+            buildPipe(sharpPipeEntry, newFileBasename, outputDir, f)
           );
         } catch (err) {
           logger.error("Error during building the pipes!");
           logger.fatal(err);
           return reject("foobar");
         }
-      }
+      });
     }
 
     return resolve(sharpPipes);
@@ -106,7 +109,7 @@ function buildSharpPipes(
 function sharpWrapper(
   inputFile: string,
   outputDir: string,
-  config: any
+  targetConfig: targetConfig
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const sharpPipeEntry = sharp({
@@ -115,7 +118,7 @@ function sharpWrapper(
 
     const fileBasename = basename(inputFile, extname(inputFile));
 
-    buildSharpPipes(sharpPipeEntry, fileBasename, outputDir, config)
+    buildSharpPipes(sharpPipeEntry, fileBasename, outputDir, targetConfig)
       .then((sharpPipes) => {
         const readStream = createReadStream(inputFile);
         readStream.on("open", () => {
@@ -193,17 +196,27 @@ function main(): void {
       readFileSync(options.configFile.toString(), "utf-8")
     );
 
-    sharpWrapper(
-      options.inputFile.toString(),
-      options.outputDir.toString(),
-      config
-    )
-      .then(() => {
-        logger.info("Successfully processed image!");
-        process.exit(EXIT_SUCCESS);
+    parseConfig(config as ImageProcessorConfig)
+      .then((parsedConfig) => {
+        const targetConfig = parsedConfig[0];
+
+        sharpWrapper(
+          options.inputFile.toString(),
+          options.outputDir.toString(),
+          targetConfig
+        )
+          .then(() => {
+            logger.info("Successfully processed image!");
+            process.exit(EXIT_SUCCESS);
+          })
+          .catch(() => {
+            logger.error("Error while processing the image!");
+            process.exit(EXIT_IMAGE_PROCESSOR_FAILURE);
+          });
       })
-      .catch(() => {
-        logger.error("Error while processing the image!");
+      .catch((err) => {
+        logger.error("Could not parse configuration file!");
+        logger.error(err);
         process.exit(EXIT_IMAGE_PROCESSOR_FAILURE);
       });
   }
