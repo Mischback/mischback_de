@@ -222,10 +222,6 @@ $(BUILD_ASSETS)/images/%.png : $(SRC_ASSETS)/images/%.* | $(PROJECT_UTILITY_SCRI
 	$(create_dir)
 	node $(PROJECT_UTILITY_SCRIPTS)/image-processor -i $< -o $(BUILD_ASSETS)/images
 
-# TODO: Remove this before merging back to development!
-testing : $(STAMP_IMAGES_READY)
-	touch _src/images/sample.jpg
-.PHONY: testing
 
 # Install all required Ruby gems as specified in Gemfile
 # This is applied as order-only prerequisite to all recipes that use
