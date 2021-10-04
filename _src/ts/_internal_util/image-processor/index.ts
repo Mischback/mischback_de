@@ -87,7 +87,7 @@ function buildSharpPipes(
     const sharpPipes: sharp.Sharp[] = [];
 
     for (const target in targetConfig) {
-      logger.debug("target loop: " + target);
+      logger.silly("target loop: " + target);
 
       const newFileBasename = targetConfig[target].filenameSuffix
         ? fileBasename + targetConfig[target].filenameSuffix
@@ -95,7 +95,7 @@ function buildSharpPipes(
 
       try {
         targetConfig[target].formats.forEach((targetFormat: targetFormats) => {
-          logger.debug("format loop: " + targetFormat);
+          logger.silly("format loop: " + targetFormat);
 
           try {
             sharpPipes.push(
@@ -161,7 +161,7 @@ function sharpWrapper(
 
         Promise.all(sharpPipes)
           .then(() => {
-            logger.debug("Processed all pipes...");
+            logger.silly("Processed all pipes...");
             return resolve();
           })
           .catch((err) => {
@@ -212,6 +212,7 @@ function main(): void {
         minLevel: "debug",
         displayFunctionName: true,
         displayFilePath: "hideNodeModulesOnly",
+        printLogMessageInNewLine: true,
       });
     }
 
@@ -229,6 +230,11 @@ function main(): void {
       .then((parsedConfig) => {
         const targetConfig = parsedConfig[0];
         const formatConfig = parsedConfig[1];
+
+        logger.debug("Running the following targetConfig:");
+        logger.debug(targetConfig);
+        logger.debug("Running the following formatConfig:");
+        logger.debug(formatConfig);
 
         sharpWrapper(
           options.inputFile.toString(),
