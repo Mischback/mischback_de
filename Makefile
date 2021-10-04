@@ -49,6 +49,7 @@ DEVELOPMENT_FLAG := dev
 STAMP_ASSETS_DEV := $(STAMP_DIR)/assets-dev
 STAMP_BUILD_COMPLETED := $(STAMP_DIR)/build-completed
 STAMP_CSS_READY := $(STAMP_DIR)/css-ready
+STAMP_IMAGES_READY := $(STAMP_DIR)/images-ready
 STAMP_JEKYLL_INSTALL := $(STAMP_DIR)/jekyll-install
 STAMP_JS_COMPILED := $(STAMP_DIR)/js-compiled
 STAMP_JS_READY := $(STAMP_DIR)/js-ready
@@ -78,10 +79,17 @@ endif
 # strictly necessary, i.e. if the project has more than one stylesheet which
 # rely on a different set of source files.
 SRC_CONTENT_FILES = index.html $(shell find $(SRC_CONTENT) -type f)
+SRC_FILES_IMAGES = $(shell find $(SRC_ASSETS)/images -type f ! -name .gitignore)
 SRC_FILES_SASS = $(shell find $(SRC_ASSETS)/sass -type f)
 SRC_FILES_TS = $(shell find $(SRC_ASSETS)/ts -path $(SRC_ASSETS)/ts/_internal_util -prune -false -o -type f)
 JEKYLL_LAYOUTS := $(shell find _layouts -type f)
 JEKYLL_INCLUDES := $(shell find _includes -type f)
+
+# First step: adjust the paths from source to build directory
+# Second step: replace all file extensions with PNG (assuming, that png is the
+# project's default image format and is applied in image-processor.json)
+TARGET_FILES_IMAGES_PATH = $(patsubst $(SRC_ASSETS)/images/%, $(BUILD_ASSETS)/images/%, $(SRC_FILES_IMAGES))
+TARGET_FILES_IMAGES = $(addsuffix .png, $(basename $(TARGET_FILES_IMAGES_PATH)))
 
 # utility function to create required directories on the fly
 create_dir = @mkdir -p $(@D)
@@ -112,9 +120,6 @@ build/development :
 	$(MAKE) $(STAMP_BUILD_COMPLETED)
 .PHONY : build/development
 
-# Shortcut to build with development settings
-dev : build/development
-.PHONY : dev
 
 # Build the whole project
 # This recipy by itsself actually executes Jekyll's build command. The recipe's
@@ -126,7 +131,7 @@ dev : build/development
 # Please note that Jekyll's build command will in fact create multiple files,
 # depending on your content.
 # TODO: Add Jekyll-specific prerequisites, e.g. "_includes", "_layouts", ...
-$(STAMP_BUILD_COMPLETED) : $(SRC_CONTENT_FILES) $(STAMP_ASSETS_READY) $(JEKYLL_LAYOUTS) $(JEYKYLL_INCLUDES) $(JEKYLL_CONFIG) | $(STAMP_JEKYLL_INSTALL)
+$(STAMP_BUILD_COMPLETED) : $(SRC_CONTENT_FILES) $(STAMP_ASSETS_READY) $(JEKYLL_LAYOUTS) $(JEKYLL_INCLUDES) $(JEKYLL_CONFIG) | $(STAMP_JEKYLL_INSTALL)
 	echo "[any] running Jekyll build process..."
 	$(create_dir)
 	bundle exec jekyll build
@@ -137,7 +142,7 @@ $(STAMP_BUILD_COMPLETED) : $(SRC_CONTENT_FILES) $(STAMP_ASSETS_READY) $(JEKYLL_L
 # During "development" it will use an artificial stamp file to track completion,
 # while it will actually perform the hashing of frontend assets during
 # "production" builds.
-$(STAMP_ASSETS_READY) : $(STAMP_CSS_READY) $(STAMP_JS_READY)
+$(STAMP_ASSETS_READY) : $(STAMP_CSS_READY) $(STAMP_JS_READY) $(STAMP_IMAGES_READY)
 	$(create_dir)
 ifeq ($(BUILD_MODE), $(DEVELOPMENT_FLAG))
 	touch $@
@@ -209,6 +214,15 @@ else
 endif
 	touch $@
 
+$(STAMP_IMAGES_READY) : $(TARGET_FILES_IMAGES)
+	$(create_dir)
+	touch $@
+
+$(BUILD_ASSETS)/images/%.png : $(SRC_ASSETS)/images/%.* | $(PROJECT_UTILITY_SCRIPTS)
+	$(create_dir)
+	node $(PROJECT_UTILITY_SCRIPTS)/image-processor -i $< -o $(BUILD_ASSETS)/images
+
+
 # Install all required Ruby gems as specified in Gemfile
 # This is applied as order-only prerequisite to all recipes that use
 # Ruby-related commands, e.g. Jekyll's build command.
@@ -231,6 +245,16 @@ $(STAMP_NODE_INSTALL) : package.json
 $(PROJECT_UTILITY_SCRIPTS) : $(shell find $(SRC_ASSETS)/ts/_internal_util -type f) tsconfig.internal_util.json | $(STAMP_NODE_INSTALL)
 	echo "[utility] building project utilities..."
 	npx tsc --project tsconfig.internal_util.json
+	touch $@
+
+utility : $(PROJECT_UTILITY_SCRIPTS)
+.PHONY : utility
+
+dev : $(PROJECT_UTILITY_SCRIPTS)
+	BUILD_MODE=$(DEVELOPMENT_FLAG) \
+	node $(PROJECT_UTILITY_SCRIPTS)/dev-bms --webRoot $(BUILD_DIR) --serverAddress "0.0.0.0" --serverPort "4000"
+.PHONY : dev
+
 
 # Shortcut to install Ruby gems, NodeJS packages and build the project's utility
 # scripts.
@@ -265,7 +289,7 @@ tree/project :
 .PHONY : tree/project
 
 tree/content :
-	tree -a -I ".editorconfig|.eslintrc.json|.gitignore|.lintstagedrc.json|.prettierignore|.prettierrc.json|.stylelintignore|.stylelintrc.json|Gemfile|Gemfile.lock|package-lock.json|package.json|postcss.config.js|tsconfig.development.json|tsconfig.internal_util.json|tsconfig.json|tsconfig.production.json|_util|_internal_util|.bundle|.git|.husky|.jekyll-cache|.make-stamps|node_modules|.sass-cache|vendor|.vscode" --dirsfirst -c
+	tree -a -I ".editorconfig|.eslintrc.json|.gitignore|.lintstagedrc.json|.nvmrc|.prettierignore|.prettierrc.json|.stylelintignore|.stylelintrc.json|Gemfile|Gemfile.lock|image-processor.json|nodemon.json|package-lock.json|package.json|postcss.config.js|tsconfig.development.json|tsconfig.internal_util.json|tsconfig.json|tsconfig.production.json|_util|_internal_util|.bundle|.git|.husky|.jekyll-cache|.make-stamps|node_modules|.sass-cache|vendor|.vscode" --dirsfirst -c
 .PHONY : tree/content
 
 tree : tree/content
