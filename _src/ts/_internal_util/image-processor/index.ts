@@ -8,6 +8,7 @@ import { Logger } from "tslog";
 import sharp = require("sharp");
 
 import {
+  formatConfig,
   parseConfig,
   targetConfig,
   targetFormats,
@@ -40,7 +41,8 @@ function buildPipe(
   sharpPipeEntry: sharp.Sharp,
   fileBasename: string,
   outputDir: string,
-  targetFormat: string
+  targetFormat: string,
+  formatConfig: formatConfig
 ): sharp.Sharp {
   let targetSharpFormat: keyof sharp.FormatEnum;
   if (targetFormat in sharp.format)
@@ -50,12 +52,15 @@ function buildPipe(
   }
 
   const newFilename = fileBasename + TargetFormatExtensions[targetFormat];
+  const targetFormatOptions = formatConfig[targetFormat]
+    ? formatConfig[targetFormat]
+    : {};
 
   let pipe = sharpPipeEntry.clone();
 
   pipe = pipe.resize({ width: 200 });
 
-  pipe = pipe.toFormat(targetSharpFormat);
+  pipe = pipe.toFormat(targetSharpFormat, targetFormatOptions);
 
   /* The following line is ignored from TypeScript checks, because they
    * find, that the Promise is not fully populated. Indeed, it will be
@@ -75,7 +80,8 @@ function buildSharpPipes(
   sharpPipeEntry: sharp.Sharp,
   fileBasename: string,
   outputDir: string,
-  targetConfig: targetConfig
+  targetConfig: targetConfig,
+  formatConfig: formatConfig
 ): Promise<sharp.Sharp[]> {
   return new Promise((resolve, reject) => {
     const sharpPipes: sharp.Sharp[] = [];
@@ -88,12 +94,18 @@ function buildSharpPipes(
         : fileBasename;
 
       try {
-        targetConfig[target].formats.forEach((f: targetFormats) => {
-          logger.debug("format loop: " + f);
+        targetConfig[target].formats.forEach((targetFormat: targetFormats) => {
+          logger.debug("format loop: " + targetFormat);
 
           try {
             sharpPipes.push(
-              buildPipe(sharpPipeEntry, newFileBasename, outputDir, f)
+              buildPipe(
+                sharpPipeEntry,
+                newFileBasename,
+                outputDir,
+                targetFormat,
+                formatConfig
+              )
             );
           } catch (err) {
             logger.error("Error during building the pipes!");
@@ -119,7 +131,8 @@ function buildSharpPipes(
 function sharpWrapper(
   inputFile: string,
   outputDir: string,
-  targetConfig: targetConfig
+  targetConfig: targetConfig,
+  formatConfig: formatConfig
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const sharpPipeEntry = sharp({
@@ -128,7 +141,13 @@ function sharpWrapper(
 
     const fileBasename = basename(inputFile, extname(inputFile));
 
-    buildSharpPipes(sharpPipeEntry, fileBasename, outputDir, targetConfig)
+    buildSharpPipes(
+      sharpPipeEntry,
+      fileBasename,
+      outputDir,
+      targetConfig,
+      formatConfig
+    )
       .then((sharpPipes) => {
         const readStream = createReadStream(inputFile);
         readStream.on("open", () => {
@@ -209,11 +228,13 @@ function main(): void {
     parseConfig(config as ImageProcessorConfig)
       .then((parsedConfig) => {
         const targetConfig = parsedConfig[0];
+        const formatConfig = parsedConfig[1];
 
         sharpWrapper(
           options.inputFile.toString(),
           options.outputDir.toString(),
-          targetConfig
+          targetConfig,
+          formatConfig
         )
           .then(() => {
             logger.info("Successfully processed image!");

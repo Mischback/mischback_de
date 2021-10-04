@@ -16,16 +16,16 @@
   "formatOptions": {
     "png": {
       "progression": false,
-      "compressionLevel": 6,
+      "compressionLevel": 9,
       "quality": 100,
       "force": true
     },
     "webp": {
-      "quality": 80,
+      "quality": 100,
       "alphaQuality": 100,
       "lossless": false,
       "nearLossless": false,
-      "reductionEffort": 4,
+      "reductionEffort": 6,
       "force": true
     }
   }
