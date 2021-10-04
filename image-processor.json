@@ -10,7 +10,7 @@
       "width": 200,
       "height": 200,
       "filenameSuffix": "-small",
-      "formats": ["png", "webp", "jpeg"]
+      "formats": ["png", "webp"]
     }
   },
   "formatOptions": {
