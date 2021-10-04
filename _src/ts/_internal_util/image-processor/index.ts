@@ -237,17 +237,28 @@ function main(): void {
           formatConfig
         )
           .then(() => {
-            logger.info("Successfully processed image!");
+            logger.info(
+              'Successfully processed image "' +
+                options.inputFile.toString() +
+                '"!'
+            );
             process.exit(EXIT_SUCCESS);
           })
           .catch(() => {
-            logger.error("Error while processing the image!");
+            logger.error(
+              'Error while processing image "' +
+                options.inputFile.toString() +
+                '"!'
+            );
             process.exit(EXIT_IMAGE_PROCESSOR_FAILURE);
           });
       })
       .catch((err) => {
         logger.error(err);
         logger.fatal("Could not parse configuration file!");
+        logger.error(
+          'Tried configuration file "' + options.configFile.toString() + '"!'
+        );
         process.exit(EXIT_IMAGE_PROCESSOR_FAILURE);
       });
   }
