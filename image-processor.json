@@ -1,0 +1,32 @@
+{
+  "targets": {
+    "full": {
+      "mode": "do_not_scale",
+      "filenameSuffix": "",
+      "formats": ["png"]
+    },
+    "small": {
+      "mode": "keep-aspect",
+      "width": 200,
+      "height": 200,
+      "filenameSuffix": "-small",
+      "formats": ["png", "webp"]
+    }
+  },
+  "formatOptions": {
+    "png": {
+      "progression": false,
+      "compressionLevel": 9,
+      "quality": 100,
+      "force": true
+    },
+    "webp": {
+      "quality": 100,
+      "alphaQuality": 100,
+      "lossless": false,
+      "nearLossless": false,
+      "reductionEffort": 6,
+      "force": true
+    }
+  }
+}

@@ -1,0 +1,5 @@
+# ignore everything (at least for development)
+*
+
+# But do include this .gitignore file
+!.gitignore
