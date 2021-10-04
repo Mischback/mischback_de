@@ -31,6 +31,7 @@ exclude: [
   ".prettierrc.json",
   ".stylelintignore",
   ".stylelintrc.json",
+  "image-processor.json",
   "Makefile",
   "nodemon.json",
   "package-lock.json",
