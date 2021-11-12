@@ -1,8 +1,0 @@
-{
-  "extends": "./tsconfig.json",
-  "include": ["_src/ts/_internal_util/**/*"],
-  "exclude": [],
-  "compilerOptions": {
-    "outDir": "./_util/bin/"
-  }
-}
