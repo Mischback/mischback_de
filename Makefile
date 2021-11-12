@@ -212,7 +212,7 @@ $(STAMP_IMAGES_READY) : $(TARGET_FILES_IMAGES)
 
 $(BUILD_ASSETS)/images/%.png : $(SRC_ASSETS)/images/%.*
 	$(create_dir)
-# node $(PROJECT_UTILITY_SCRIPTS)/image-processor -i $< -o $(BUILD_ASSETS)/images
+	npx imp --inputFile $< --outputDir $(BUILD_ASSETS)/images
 
 
 # Install all required Ruby gems as specified in Gemfile
