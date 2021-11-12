@@ -29,10 +29,6 @@ ASSETS_MANIFEST_FILE := _data/assets.json
 # Jekyll's config file (default: _config.yml)
 JEKYLL_CONFIG := _config.yml
 
-# Directory for the project's internal utility scripts
-# Should be included in .gitignore
-PROJECT_UTILITY_SCRIPTS := _util/bin/
-
 # Make's internal stamp directory
 # Stamps are used to keep track of certain build steps.
 # Should be included in .gitignore
@@ -70,7 +66,6 @@ STAMP_ASSETS_READY := $(STAMP_ASSETS_DEV)
 $(STAMP_JS_COMPILED) : tsconfig.development.json
 else
 STAMP_ASSETS_READY := $(ASSETS_MANIFEST_FILE)
-$(STAMP_ASSETS_READY) : | $(PROJECT_UTILITY_SCRIPTS)
 $(STAMP_JS_COMPILED) : tsconfig.production.json
 endif
 
@@ -81,7 +76,7 @@ endif
 SRC_CONTENT_FILES = index.html $(shell find $(SRC_CONTENT) -type f)
 SRC_FILES_IMAGES = $(shell find $(SRC_ASSETS)/images -type f ! -name .gitignore)
 SRC_FILES_SASS = $(shell find $(SRC_ASSETS)/sass -type f)
-SRC_FILES_TS = $(shell find $(SRC_ASSETS)/ts -path $(SRC_ASSETS)/ts/_internal_util -prune -false -o -type f)
+SRC_FILES_TS = $(shell find $(SRC_ASSETS)/ts -false -o -type f)
 JEKYLL_LAYOUTS := $(shell find _layouts -type f)
 JEKYLL_INCLUDES := $(shell find _includes -type f)
 
@@ -149,7 +144,7 @@ ifeq ($(BUILD_MODE), $(DEVELOPMENT_FLAG))
 else
 	echo "[production] hashing asset files..."
 	mkdir -p $(BUILD_ASSETS)
-	node $(PROJECT_UTILITY_SCRIPTS)/busted_manifest --rootDirectory $(BUILD_ASSETS) --outFile $@ -m rename
+	npx buster -i $(BUILD_ASSETS) -o $@ -m rename
 endif
 
 # Artificial build step for CSS assets
@@ -201,9 +196,6 @@ endif
 # Compile TS sources to JS
 # All source files are compiled in one run of the TS compiler (tsc), with
 # different settings for "production" and "development".
-# Please note that this will only handle the compilation of actual frontend
-# assets and not the project's internal utility scripts, refer to target
-# $(PROJECT_UTILITY_SCRIPTS).
 $(STAMP_JS_COMPILED) : $(SRC_FILES_TS) | $(STAMP_NODE_INSTALL)
 ifeq ($(BUILD_MODE), $(DEVELOPMENT_FLAG))
 	echo "[development] compiling script files..."
@@ -218,9 +210,9 @@ $(STAMP_IMAGES_READY) : $(TARGET_FILES_IMAGES)
 	$(create_dir)
 	touch $@
 
-$(BUILD_ASSETS)/images/%.png : $(SRC_ASSETS)/images/%.* | $(PROJECT_UTILITY_SCRIPTS)
+$(BUILD_ASSETS)/images/%.png : $(SRC_ASSETS)/images/%.*
 	$(create_dir)
-	node $(PROJECT_UTILITY_SCRIPTS)/image-processor -i $< -o $(BUILD_ASSETS)/images
+	npx imp --inputFile $< --outputDir $(BUILD_ASSETS)/images
 
 
 # Install all required Ruby gems as specified in Gemfile
@@ -241,24 +233,15 @@ $(STAMP_NODE_INSTALL) : package.json
 	npm install
 	touch $@
 
-# Compile the internal utility scripts
-$(PROJECT_UTILITY_SCRIPTS) : $(shell find $(SRC_ASSETS)/ts/_internal_util -type f) tsconfig.internal_util.json | $(STAMP_NODE_INSTALL)
-	echo "[utility] building project utilities..."
-	npx tsc --project tsconfig.internal_util.json
-	touch $@
-
-utility : $(PROJECT_UTILITY_SCRIPTS)
-.PHONY : utility
-
-dev : $(PROJECT_UTILITY_SCRIPTS)
+dev :
 	BUILD_MODE=$(DEVELOPMENT_FLAG) \
-	node $(PROJECT_UTILITY_SCRIPTS)/dev-bms --webRoot $(BUILD_DIR) --serverAddress "0.0.0.0" --serverPort "4000"
+	npx srv4dev --webRoot $(BUILD_DIR) --address "0.0.0.0" --port "4000"
 .PHONY : dev
 
 
 # Shortcut to install Ruby gems, NodeJS packages and build the project's utility
 # scripts.
-setup : $(PROJECT_UTILITY_SCRIPTS) $(STAMP_NODE_INSTALL) $(STAMP_JEKYLL_INSTALL)
+setup : $(STAMP_NODE_INSTALL) $(STAMP_JEKYLL_INSTALL)
 .PHONY : setup
 
 # The following recipes run the linters against the code base, including
@@ -289,7 +272,7 @@ tree/project :
 .PHONY : tree/project
 
 tree/content :
-	tree -a -I ".editorconfig|.eslintrc.json|.gitignore|.lintstagedrc.json|.nvmrc|.prettierignore|.prettierrc.json|.stylelintignore|.stylelintrc.json|Gemfile|Gemfile.lock|image-processor.json|nodemon.json|package-lock.json|package.json|postcss.config.js|tsconfig.development.json|tsconfig.internal_util.json|tsconfig.json|tsconfig.production.json|_util|_internal_util|.bundle|.git|.husky|.jekyll-cache|.make-stamps|node_modules|.sass-cache|vendor|.vscode" --dirsfirst -c
+	tree -a -I ".editorconfig|.eslintrc.json|.gitignore|.imprc.json|.lintstagedrc.json|.nvmrc|.prettierignore|.prettierrc.json|.stylelintignore|.stylelintrc.json|Gemfile|Gemfile.lock|nodemon.json|package-lock.json|package.json|postcss.config.js|tsconfig.development.json|tsconfig.json|tsconfig.production.json|.bundle|.git|.husky|.jekyll-cache|.make-stamps|node_modules|.sass-cache|vendor|.vscode" --dirsfirst -c
 .PHONY : tree/content
 
 tree : tree/content
@@ -302,8 +285,3 @@ clean :
 	rm -rf $(STAMP_DIR)
 	rm -f $(ASSETS_MANIFEST_FILE)
 .PHONY : clean
-
-# Additionally removes the project's utility scripts
-clean/full : clean
-	rm -rf $(PROJECT_UTILITY_SCRIPTS)
-.PHONY : clean/full
