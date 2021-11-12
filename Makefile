@@ -149,7 +149,7 @@ ifeq ($(BUILD_MODE), $(DEVELOPMENT_FLAG))
 else
 	echo "[production] hashing asset files..."
 	mkdir -p $(BUILD_ASSETS)
-	node $(PROJECT_UTILITY_SCRIPTS)/busted_manifest --rootDirectory $(BUILD_ASSETS) --outFile $@ -m rename
+	npx buster -i $(BUILD_ASSETS) -o $@ -m rename
 endif
 
 # Artificial build step for CSS assets
@@ -252,7 +252,7 @@ utility : $(PROJECT_UTILITY_SCRIPTS)
 
 dev : $(PROJECT_UTILITY_SCRIPTS)
 	BUILD_MODE=$(DEVELOPMENT_FLAG) \
-	node $(PROJECT_UTILITY_SCRIPTS)/dev-bms --webRoot $(BUILD_DIR) --serverAddress "0.0.0.0" --serverPort "4000"
+# node $(PROJECT_UTILITY_SCRIPTS)/dev-bms --webRoot $(BUILD_DIR) --serverAddress "0.0.0.0" --serverPort "4000"
 .PHONY : dev
 
 
